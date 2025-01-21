@@ -9,6 +9,7 @@ import DashboardLayout from './components/layout/DashboardLayout';
 import Overview from './pages/dashboard/Overview';
 import Documents from './pages/dashboard/Documents';
 import DocumentEditor from './pages/dashboard/DocumentEditor';
+import Settings from './pages/dashboard/Settings';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 
 function App() {
@@ -58,6 +59,16 @@ function App() {
             <ProtectedRoute>
               <DashboardLayout>
                 <DocumentEditor />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/settings"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <Settings />
               </DashboardLayout>
             </ProtectedRoute>
           }

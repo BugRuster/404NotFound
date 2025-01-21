@@ -4,7 +4,6 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   FileText, 
-  Users, 
   Settings,
   LogOut,
   Menu,
@@ -19,12 +18,12 @@ const DashboardLayout = ({ children }) => {
   const navigationItems = [
     { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
     { name: 'Documents', icon: FileText, path: '/dashboard/documents' },
-    { name: 'Team', icon: Users, path: '/dashboard/team' },
     { name: 'Settings', icon: Settings, path: '/dashboard/settings' },
   ];
 
   const handleLogout = () => {
     // TODO: Implement logout logic
+    localStorage.removeItem('isAuthenticated');
     navigate('/login');
   };
 
