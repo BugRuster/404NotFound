@@ -1,4 +1,3 @@
-// src/pages/Login.jsx
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import FormInput from '../components/common/FormInput';
@@ -7,6 +6,7 @@ import useAuth from '../hooks/useAuth';
 import { validateEmail, validatePassword } from '../utils/validation';
 import Header from '../components/layout/Header';
 import Footer from '../components/layout/Footer';
+import { githubService } from '../services/github';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -22,36 +22,30 @@ const Login = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    // Clear error when user starts typing
+    setFormData(prev => ({ ...prev, [name]: value }));
     if (formErrors[name]) {
-      setFormErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
+      setFormErrors(prev => ({ ...prev, [name]: '' }));
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validate form
     const emailError = validateEmail(formData.email);
     const passwordError = validatePassword(formData.password);
 
     if (emailError || passwordError) {
-      setFormErrors({
-        email: emailError,
-        password: passwordError,
-      });
+      setFormErrors({ email: emailError, password: passwordError });
       return;
     }
 
     await login(formData.email, formData.password);
   };
+
+  const handleGithubLogin = () => {
+    githubService.connectGithub();
+  };
+
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -148,12 +142,12 @@ const Login = () => {
                   Google
                 </Button>
                 <Button
-                  variant="secondary"
-                  className="w-full"
-                  onClick={() => {/* TODO: Implement GitHub OAuth */}}
-                >
-                  GitHub
-                </Button>
+    variant="secondary"
+    className="w-full"
+    onClick={handleGithubLogin}
+  >
+    GitHub
+  </Button>
               </div>
             </div>
           </div>

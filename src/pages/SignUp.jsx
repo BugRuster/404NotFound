@@ -1,4 +1,3 @@
-// src/pages/SignUp.jsx
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import FormInput from '../components/common/FormInput';
@@ -7,58 +6,64 @@ import useAuth from '../hooks/useAuth';
 import { validateEmail, validatePassword } from '../utils/validation';
 import Header from '../components/layout/Header';
 import Footer from '../components/layout/Footer';
+import { logger } from '../utils/logger';
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
-    fullName: '',
+    name: '',
     email: '',
     password: '',
     confirmPassword: '',
   });
 
   const [formErrors, setFormErrors] = useState({
-    fullName: '',
+    name: '',
     email: '',
     password: '',
     confirmPassword: '',
   });
 
-  const { isLoading, error: authError } = useAuth();
+  const { register, isLoading, error: authError } = useAuth();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    // Clear error when user starts typing
+    setFormData(prev => ({ ...prev, [name]: value }));
     if (formErrors[name]) {
-      setFormErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
+      setFormErrors(prev => ({ ...prev, [name]: '' }));
     }
   };
 
   const validateForm = () => {
+    logger.info('Validating form data');
     const errors = {
-      fullName: !formData.fullName ? 'Full name is required' : '',
+      name: !formData.name ? 'Name is required' : '',
       email: validateEmail(formData.email),
       password: validatePassword(formData.password),
       confirmPassword: formData.password !== formData.confirmPassword 
         ? 'Passwords do not match' 
-        : '',
+        : ''
     };
 
     setFormErrors(errors);
-    return !Object.values(errors).some(error => error);
+    const isValid = !Object.values(errors).some(error => error);
+    logger.info('Form validation result:', isValid);
+    return isValid;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    logger.info('Form submitted');
+
     if (validateForm()) {
-      // TODO: Implement signup logic
-      console.log('Form submitted:', formData);
+      try {
+        await register({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password
+        });
+      } catch (error) {
+        logger.error('Registration error:', error);
+      }
     }
   };
 
@@ -90,10 +95,10 @@ const SignUp = () => {
               <FormInput
                 label="Full Name"
                 type="text"
-                name="fullName"
-                value={formData.fullName}
+                name="name"
+                value={formData.name}
                 onChange={handleChange}
-                error={formErrors.fullName}
+                error={formErrors.name}
                 required
               />
 
@@ -127,44 +132,14 @@ const SignUp = () => {
                 required
               />
 
-              <div>
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={isLoading}
-                >
-                  {isLoading ? 'Creating account...' : 'Create account'}
-                </Button>
-              </div>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Creating account...' : 'Create account'}
+              </Button>
             </form>
-
-            <div className="mt-6">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300" />
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">Or continue with</span>
-                </div>
-              </div>
-
-              <div className="mt-6 grid grid-cols-2 gap-3">
-                <Button
-                  variant="secondary"
-                  className="w-full"
-                  onClick={() => {/* TODO: Implement Google OAuth */}}
-                >
-                  Google
-                </Button>
-                <Button
-                  variant="secondary"
-                  className="w-full"
-                  onClick={() => {/* TODO: Implement GitHub OAuth */}}
-                >
-                  GitHub
-                </Button>
-              </div>
-            </div>
           </div>
         </div>
       </div>

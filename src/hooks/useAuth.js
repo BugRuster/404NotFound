@@ -1,6 +1,6 @@
-// src/hooks/useAuth.js
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { authService } from '../services/auth';
 
 const useAuth = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -10,40 +10,39 @@ const useAuth = () => {
   const login = async (email, password) => {
     setIsLoading(true);
     setError(null);
-    
     try {
-      // TODO: Replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-      
-      if (email === 'test@example.com' && password === 'password') {
-        localStorage.setItem('isAuthenticated', 'true');
-        navigate('/dashboard');
-      } else {
-        throw new Error('Invalid credentials');
-      }
+      const response = await authService.login(email, password);
+      localStorage.setItem('token', response.data.token);
+      navigate('/dashboard');
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.message || 'Login failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const register = async (userData) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await authService.register(userData);
+      localStorage.setItem('token', response.data.token);
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Registration failed');
     } finally {
       setIsLoading(false);
     }
   };
 
   const logout = () => {
-    localStorage.removeItem('isAuthenticated');
+    authService.logout();
     navigate('/login');
   };
 
-  const isAuthenticated = () => {
-    return localStorage.getItem('isAuthenticated') === 'true';
-  };
+  const isAuthenticated = () => !!localStorage.getItem('token');
 
-  return {
-    login,
-    logout,
-    isAuthenticated,
-    isLoading,
-    error
-  };
+  return { login, register, logout, isAuthenticated, isLoading, error };
 };
 
 export default useAuth;
