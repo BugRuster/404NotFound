@@ -1,4 +1,3 @@
-// src/App.jsx
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
@@ -17,32 +16,24 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* Public routes */}
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/docs" element={<Documentation />} />
 
-        {/* Protected dashboard routes */}
         <Route
           path="/dashboard"
           element={
             <ProtectedRoute>
               <DashboardLayout>
-                <Overview github_token={searchParams.get('github_token')} />
+                <Overview />
               </DashboardLayout>
             </ProtectedRoute>
           }
         />
         <Route
-          path="/dashboard/github/callback"
-          element={
-            <ProtectedRoute>
-              <DashboardLayout>
-                <GitHubCallback />
-              </DashboardLayout>
-            </ProtectedRoute>
-          }
+          path="/dashboard/github-callback"
+          element={<GitHubCallback />}
         />
         <Route
           path="/dashboard/documents"
