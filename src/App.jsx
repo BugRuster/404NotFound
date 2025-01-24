@@ -11,6 +11,7 @@ import Documents from './pages/dashboard/Documents';
 import DocumentEditor from './pages/dashboard/DocumentEditor';
 import Settings from './pages/dashboard/Settings';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import GitHubCallback from './components/github/GitHubCallback';
 
 function App() {
   return (
@@ -28,7 +29,17 @@ function App() {
           element={
             <ProtectedRoute>
               <DashboardLayout>
-                <Overview />
+                <Overview github_token={searchParams.get('github_token')} />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/github/callback"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <GitHubCallback />
               </DashboardLayout>
             </ProtectedRoute>
           }

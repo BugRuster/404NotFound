@@ -1,13 +1,20 @@
 // src/pages/dashboard/Overview.jsx
-import React from 'react';
-import { FileText, Users, Clock } from 'lucide-react';
+import { useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { githubService } from '../../services/github';
 
 const Overview = () => {
-  const stats = [
-    { name: 'Total Documents', value: '12', icon: FileText },
-    { name: 'Team Members', value: '5', icon: Users },
-    { name: 'Last Updated', value: '2h ago', icon: Clock },
-  ];
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = searchParams.get('github_token');
+    if (token) {
+      githubService.storeToken(token);
+      navigate('/dashboard', { replace: true });
+    }
+  }, [searchParams]);
+
 
   return (
     <div>
