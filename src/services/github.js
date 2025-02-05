@@ -2,28 +2,13 @@
 import api from './api';
 
 export const githubService = {
-  connectGithub: () => {
-    // Get GitHub OAuth URL from backend
-    api.get('/github/auth-url')
-      .then(response => {
-        window.location.href = response.data.data.url;
-      })
-      .catch(error => {
-        console.error('Error getting GitHub auth URL:', error);
-      });
-  },
-
-  getRepositories: async () => {
+  connectGithub: async () => {
     try {
-      const response = await api.get('/github/repositories');
-      return response.data.data;
+      const response = await api.get('/github/auth-url');
+      window.location.href = response.data.data.url;
     } catch (error) {
-      console.error('Error fetching repositories:', error);
+      console.error('Error connecting to GitHub:', error);
       throw error;
     }
-  },
-
-  storeToken: (token) => localStorage.setItem('github_token', token),
-  getToken: () => localStorage.getItem('github_token'),
-  removeToken: () => localStorage.removeItem('github_token')
+  }
 };
