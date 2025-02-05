@@ -49,23 +49,28 @@ const SignUp = () => {
     logger.info('Form validation result:', isValid);
     return isValid;
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    logger.info('Form submitted');
-
+    logger.info('Starting registration with:', formData);
+    
     if (validateForm()) {
       try {
-        await register({
+        const userData = {
           name: formData.name,
           email: formData.email,
           password: formData.password
-        });
+        };
+        
+        console.log('Sending registration request with:', userData);
+        const response = await register(userData);
+        console.log('Registration successful:', response);
       } catch (error) {
-        logger.error('Registration error:', error);
+        console.error('Registration error:', error);
       }
     }
   };
+  
+  
 
   return (
     <div className="min-h-screen bg-gray-50">

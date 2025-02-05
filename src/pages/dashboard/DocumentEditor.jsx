@@ -20,38 +20,29 @@ const DocumentEditor = () => {
     instructions: ''
   });
 
-  const handleGenerateDoc = async (repoData) => {
-    setIsGenerating(true);
-    try {
-      // TODO: Implement actual API call to your backend
-      console.log('Generating documentation for:', { repoData, aiSettings });
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Simulate generated content
-      const simulatedContent = `# ${repoData.repoUrl.split('/').pop()}
-## Project Documentation
+// src/pages/dashboard/DocumentEditor.jsx
+// Update the handleGenerateDoc function:
 
-This is a placeholder for the AI-generated documentation.
-You can replace this with actual API integration later.
+const handleGenerateDoc = async (repoData) => {
+  setIsGenerating(true);
+  try {
+    // Extract owner and repo from GitHub URL
+    const urlParts = repoData.repoUrl.split('/');
+    const owner = urlParts[urlParts.length - 2];
+    const repo = urlParts[urlParts.length - 1];
 
-### Repository Analysis
-- URL: ${repoData.repoUrl}
-- Style: ${aiSettings.style}
-- Requested Pages: ${aiSettings.pageCount}
-
-${aiSettings.instructions ? `### Additional Instructions\n${aiSettings.instructions}` : ''}`;
-
-      setGeneratedContent(simulatedContent);
-      setShowEditor(true);
-    } catch (error) {
-      console.error('Error generating documentation:', error);
-      // TODO: Handle error state
-    } finally {
-      setIsGenerating(false);
-    }
-  };
+    // Start analysis
+    const analysis = await repositoryService.analyzeRepository(owner, repo);
+    
+    setGeneratedContent(`# ${repo}\n\n${analysis.data.content}`);
+    setShowEditor(true);
+  } catch (error) {
+    console.error('Error generating documentation:', error);
+    // Show error message to user
+  } finally {
+    setIsGenerating(false);
+  }
+};
 
   const handleSave = (content) => {
     // TODO: Implement save logic

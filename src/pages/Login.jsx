@@ -1,3 +1,4 @@
+// src/pages/Login.jsx
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import FormInput from '../components/common/FormInput';
@@ -7,6 +8,7 @@ import { validateEmail, validatePassword } from '../utils/validation';
 import Header from '../components/layout/Header';
 import Footer from '../components/layout/Footer';
 import { githubService } from '../services/github';
+import Loading from '../components/common/Loading';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -23,29 +25,44 @@ const Login = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    // Clear error when user types
     if (formErrors[name]) {
       setFormErrors(prev => ({ ...prev, [name]: '' }));
     }
   };
 
+  const validateForm = () => {
+    const errors = {
+      email: validateEmail(formData.email),
+      password: validatePassword(formData.password),
+    };
+    setFormErrors(errors);
+    return !Object.values(errors).some(error => error);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    const emailError = validateEmail(formData.email);
-    const passwordError = validatePassword(formData.password);
+    if (!validateForm()) return;
 
-    if (emailError || passwordError) {
-      setFormErrors({ email: emailError, password: passwordError });
-      return;
+    try {
+      await login(formData.email, formData.password);
+    } catch (error) {
+      // Error is handled by useAuth hook
+      console.error('Login error:', error);
     }
-
-    await login(formData.email, formData.password);
   };
 
   const handleGithubLogin = () => {
     githubService.connectGithub();
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loading size="lg" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -92,35 +109,13 @@ const Login = () => {
                 required
               />
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <input
-                    id="remember-me"
-                    name="remember-me"
-                    type="checkbox"
-                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                  />
-                  <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
-                    Remember me
-                  </label>
-                </div>
-
-                <div className="text-sm">
-                  <Link to="/forgot-password" className="font-medium text-indigo-600 hover:text-indigo-500">
-                    Forgot your password?
-                  </Link>
-                </div>
-              </div>
-
-              <div>
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={isLoading}
-                >
-                  {isLoading ? 'Signing in...' : 'Sign in'}
-                </Button>
-              </div>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Signing in...' : 'Sign in'}
+              </Button>
             </form>
 
             <div className="mt-6">
@@ -133,21 +128,14 @@ const Login = () => {
                 </div>
               </div>
 
-              <div className="mt-6 grid grid-cols-2 gap-3">
+              <div className="mt-6">
                 <Button
                   variant="secondary"
                   className="w-full"
-                  onClick={() => {/* TODO: Implement Google OAuth */}}
+                  onClick={handleGithubLogin}
                 >
-                  Google
+                  GitHub
                 </Button>
-                <Button
-    variant="secondary"
-    className="w-full"
-    onClick={handleGithubLogin}
-  >
-    GitHub
-  </Button>
               </div>
             </div>
           </div>

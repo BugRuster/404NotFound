@@ -2,10 +2,30 @@
 import { useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { githubService } from '../../services/github';
+import { FileText, Users, GitBranch } from 'lucide-react'; // Import icons you need
 
 const Overview = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+
+  // Define stats array
+  const stats = [
+    {
+      name: 'Total Documents',
+      value: '12',
+      icon: FileText
+    },
+    {
+      name: 'Team Members',
+      value: '4',
+      icon: Users
+    },
+    {
+      name: 'Connected Repos',
+      value: '3',
+      icon: GitBranch
+    }
+  ];
 
   useEffect(() => {
     const token = searchParams.get('github_token');
@@ -13,8 +33,7 @@ const Overview = () => {
       githubService.storeToken(token);
       navigate('/dashboard', { replace: true });
     }
-  }, [searchParams]);
-
+  }, [searchParams, navigate]);
 
   return (
     <div>
@@ -53,17 +72,36 @@ const Overview = () => {
         Recent Activity
       </h2>
       <div className="bg-white shadow overflow-hidden sm:rounded-md">
-        <ul className="divide-y divide-gray-200">
-          {[1, 2, 3].map((item) => (
-            <li key={item}>
+        <ul role="list" className="divide-y divide-gray-200">
+          {[
+            {
+              id: 1,
+              title: 'API Documentation updated',
+              time: '2 hours ago',
+              status: 'completed'
+            },
+            {
+              id: 2,
+              title: 'New repository connected',
+              time: '4 hours ago',
+              status: 'completed'
+            },
+            {
+              id: 3,
+              title: 'Team member invited',
+              time: '1 day ago',
+              status: 'completed'
+            }
+          ].map((activity) => (
+            <li key={activity.id}>
               <div className="px-4 py-4 sm:px-6">
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-medium text-indigo-600 truncate">
-                    Document {item} was updated
+                    {activity.title}
                   </p>
                   <div className="ml-2 flex-shrink-0 flex">
                     <p className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                      2 hours ago
+                      {activity.time}
                     </p>
                   </div>
                 </div>
@@ -77,4 +115,3 @@ const Overview = () => {
 };
 
 export default Overview;
-
