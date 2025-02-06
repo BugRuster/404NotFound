@@ -1,97 +1,132 @@
 // src/pages/dashboard/DocumentEditor.jsx
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Editor from '../../components/docs/Editor';
-import GithubRepoInput from '../../components/docs/GithubRepoInput';
-import AiSettingsForm from '../../components/docs/AiSettingsForm';
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { documentService } from '../../services/documents';
 import { Button } from '../../components/common/Button';
-import { ArrowLeft } from 'lucide-react';
+import FormInput from '../../components/common/FormInput';
+import Editor from '../../components/editor/Editor';
+import Loading from '../../components/common/Loading';
+import { Save, ArrowLeft } from 'lucide-react';
 
 const DocumentEditor = () => {
-  const [title, setTitle] = useState('Untitled Document');
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [showEditor, setShowEditor] = useState(false);
-  const [generatedContent, setGeneratedContent] = useState('');
+  const { id } = useParams();
   const navigate = useNavigate();
-
-  const [aiSettings, setAiSettings] = useState({
-    pageCount: 5,
-    style: 'technical',
-    instructions: ''
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [document, setDocument] = useState({
+    title: '',
+    description: '',
+    content: '',
+    status: 'draft'
   });
 
-// src/pages/dashboard/DocumentEditor.jsx
-// Update the handleGenerateDoc function:
+  useEffect(() => {
+    if (id) {
+      fetchDocument();
+    }
+  }, [id]);
 
-const handleGenerateDoc = async (repoData) => {
-  setIsGenerating(true);
-  try {
-    // Extract owner and repo from GitHub URL
-    const urlParts = repoData.repoUrl.split('/');
-    const owner = urlParts[urlParts.length - 2];
-    const repo = urlParts[urlParts.length - 1];
-
-    // Start analysis
-    const analysis = await repositoryService.analyzeRepository(owner, repo);
-    
-    setGeneratedContent(`# ${repo}\n\n${analysis.data.content}`);
-    setShowEditor(true);
-  } catch (error) {
-    console.error('Error generating documentation:', error);
-    // Show error message to user
-  } finally {
-    setIsGenerating(false);
-  }
-};
-
-  const handleSave = (content) => {
-    // TODO: Implement save logic
-    console.log('Saving document:', { title, content });
-    navigate('/dashboard/documents');
+  const fetchDocument = async () => {
+    try {
+      setIsLoading(true);
+      const response = await documentService.getDocument(id);
+      setDocument(response.data);
+    } catch (err) {
+      setError('Failed to fetch document');
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  if (showEditor) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => setShowEditor(false)}
-          >
-            <ArrowLeft size={16} className="mr-2" />
-            Back to Settings
-          </Button>
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      setIsLoading(true);
+      if (id) {
+        await documentService.updateDocument(id, document);
+      } else {
+        await documentService.createDocument(document);
+      }
+      navigate('/dashboard/documents');
+    } catch (err) {
+      setError('Failed to save document');
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="text-2xl font-bold text-gray-900 bg-transparent border-0 focus:ring-0 focus:outline-none p-0"
-            placeholder="Document Title"
-          />
-        </div>
-
-        <Editor initialContent={generatedContent} onSave={handleSave} />
-      </div>
-    );
+  if (isLoading) {
+    return <Loading />;
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Generate Documentation</h1>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <GithubRepoInput
-          onSubmit={handleGenerateDoc}
-          isLoading={isGenerating}
-        />
-        
-        <AiSettingsForm
-          settings={aiSettings}
-          onSettingsChange={setAiSettings}
-        />
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            onClick={() => navigate('/dashboard/documents')}
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back
+          </Button>
+          <h1 className="text-2xl font-bold text-gray-900">
+            {id ? 'Edit Document' : 'Create New Document'}
+          </h1>
+        </div>
+        <Button onClick={handleSubmit} disabled={isLoading}>
+          <Save className="w-4 h-4 mr-2" />
+          Save
+        </Button>
       </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-600 rounded-md p-4">
+          {error}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <FormInput
+          label="Title"
+          value={document.title}
+          onChange={(e) => setDocument({ ...document, title: e.target.value })}
+          required
+        />
+
+        <FormInput
+          label="Description"
+          value={document.description}
+          onChange={(e) => setDocument({ ...document, description: e.target.value })}
+          multiline
+        />
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Content
+          </label>
+          <Editor
+            content={document.content}
+            onChange={(content) => setDocument({ ...document, content })}
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Status
+          </label>
+          <select
+            value={document.status}
+            onChange={(e) => setDocument({ ...document, status: e.target.value })}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          >
+            <option value="draft">Draft</option>
+            <option value="published">Published</option>
+          </select>
+        </div>
+      </form>
     </div>
   );
 };
