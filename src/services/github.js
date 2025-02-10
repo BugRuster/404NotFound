@@ -2,6 +2,21 @@
 import api from './api';
 
 export const githubService = {
+  // Store GitHub token
+  storeToken: (token) => {
+    localStorage.setItem('github_token', token);
+  },
+
+  // Check if GitHub is connected
+  isConnected: () => {
+    return !!localStorage.getItem('github_token');
+  },
+
+  // Remove GitHub token
+  disconnect: () => {
+    localStorage.removeItem('github_token');
+  },
+
   // Get GitHub auth URL
   getAuthUrl: async () => {
     try {
@@ -12,7 +27,17 @@ export const githubService = {
     }
   },
 
-  // Get user's repositories
+  // Initialize GitHub connection
+  initiateConnection: async () => {
+    try {
+      const { data } = await api.get('/github/auth-url');
+      window.location.href = data.url; // Redirect to GitHub auth
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Existing methods...
   getRepositories: async () => {
     try {
       const response = await api.get('/github/repositories');
@@ -21,8 +46,15 @@ export const githubService = {
       throw error;
     }
   },
+  handleCallback: async (code, state) => {
+    try {
+      const response = await api.get('/github/callback', { params: { code, state } });
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  },
 
-  // Get repository branches
   getBranches: async (owner, repo) => {
     try {
       const response = await api.get(`/github/${owner}/${repo}/branches`);
@@ -32,7 +64,6 @@ export const githubService = {
     }
   },
 
-  // Get repository files
   getFiles: async (owner, repo, branch) => {
     try {
       const response = await api.get(`/github/${owner}/${repo}/files`, {

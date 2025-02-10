@@ -23,18 +23,35 @@ export const useAuth = () => {
     }
   }, [navigate]);
 
+  // Add register function
+  const register = useCallback(async (userData) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await authService.register(userData);
+      navigate('/dashboard');
+      return response;
+    } catch (err) {
+      setError(err.response?.data?.message || 'Registration failed');
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [navigate]);
+
   const isAuthenticated = useCallback(() => {
     const token = localStorage.getItem('token');
     return !!token;
   }, []);
 
   const logout = useCallback(() => {
-    localStorage.removeItem('token');
+    authService.logout();
     navigate('/login');
   }, [navigate]);
 
   return {
     login,
+    register,  // Added register to the returned object
     logout,
     isAuthenticated,
     isLoading,

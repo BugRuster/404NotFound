@@ -1,0 +1,123 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply transition-colors duration-300 bg-background-light dark:bg-background-dark text-secondary-light dark:text-secondary-dark;
+  }
+  
+  .futuristic-cursor {
+    cursor: none !important;
+  }
+  
+  .futuristic-cursor * {
+    cursor: none !important;
+  }
+  
+  .custom-cursor {
+    @apply fixed pointer-events-none z-[9999] mix-blend-difference;
+    width: 24px;
+    height: 24px;
+    background: rgba(99, 102, 241, 0.8);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.2s, height 0.2s, transform 0.2s;
+    filter: blur(0.5px);
+  }
+  
+  .custom-cursor.scale-150 {
+    width: 36px;
+    height: 36px;
+    background: rgba(99, 102, 241, 1);
+  }
+  
+  .custom-cursor-dot {
+    @apply fixed pointer-events-none z-[9999];
+    width: 4px;
+    height: 4px;
+    background: white;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: transform 0.1s ease;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    @apply bg-white/10 dark:bg-black/10 backdrop-blur-lg border border-white/20 dark:border-black/20 rounded-lg;
+  }
+  
+  .input-glow {
+    @apply focus:ring-2 focus:ring-primary-light dark:focus:ring-primary-dark focus:ring-opacity-50 transition-shadow;
+  }
+  
+  .button-glow {
+    @apply hover:shadow-lg hover:shadow-primary-light/20 dark:hover:shadow-primary-dark/20 transition-shadow;
+  }
+  
+  .futuristic-border {
+    @apply border border-primary-light/20 dark:border-primary-dark/20 rounded-lg;
+  }
+  
+  .card {
+    @apply glass-panel p-6 button-glow futuristic-border;
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Page Transitions */
+.page-enter {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.page-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 300ms, transform 300ms;
+}
+
+.page-exit {
+  opacity: 1;
+}
+
+.page-exit-active {
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: opacity 300ms, transform 300ms;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100 dark:bg-gray-800;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-primary-light dark:bg-primary-dark rounded-full;
+}

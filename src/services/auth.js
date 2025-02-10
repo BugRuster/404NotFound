@@ -19,6 +19,23 @@ export const authService = {
     }
   },
 
+  // Add register function
+  register: async (userData) => {
+    try {
+      logger.info('Registering new user:', userData.email);
+      const response = await api.post('/auth/register', userData);
+      
+      if (response.data.data.token) {
+        localStorage.setItem('token', response.data.data.token);
+      }
+      
+      return response.data;
+    } catch (error) {
+      logger.error('Registration failed:', error.response?.data?.message || error.message);
+      throw error;
+    }
+  },
+
   logout: () => {
     localStorage.removeItem('token');
   },

@@ -1,12 +1,10 @@
+// src/pages/SignUp.jsx
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import FormInput from '../components/common/FormInput';
 import { Button } from '../components/common/Button';
 import useAuth from '../hooks/useAuth';
 import { validateEmail, validatePassword } from '../utils/validation';
-import Header from '../components/layout/Header';
-import Footer from '../components/layout/Footer';
-import { logger } from '../utils/logger';
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
@@ -34,7 +32,6 @@ const SignUp = () => {
   };
 
   const validateForm = () => {
-    logger.info('Validating form data');
     const errors = {
       name: !formData.name ? 'Name is required' : '',
       email: validateEmail(formData.email),
@@ -45,58 +42,45 @@ const SignUp = () => {
     };
 
     setFormErrors(errors);
-    const isValid = !Object.values(errors).some(error => error);
-    logger.info('Form validation result:', isValid);
-    return isValid;
+    return !Object.values(errors).some(error => error);
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    logger.info('Starting registration with:', formData);
-    
     if (validateForm()) {
       try {
-        const userData = {
+        await register({
           name: formData.name,
           email: formData.email,
           password: formData.password
-        };
-        
-        console.log('Sending registration request with:', userData);
-        const response = await register(userData);
-        console.log('Registration successful:', response);
+        });
       } catch (error) {
         console.error('Registration error:', error);
       }
     }
   };
-  
-  
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      <div className="flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-        <div className="sm:mx-auto sm:w-full sm:max-w-md">
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Create your account
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Already have an account?{' '}
-            <Link to="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
-              Sign in
-            </Link>
-          </p>
-        </div>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background-light to-surface-light dark:from-background-dark dark:to-surface-dark">
+      <div className="w-full max-w-md px-6 py-8">
+        <div className="glass-panel p-8 rounded-2xl animate-fadeIn">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-light to-indigo-500 dark:from-primary-dark dark:to-indigo-400">
+              Create Account
+            </h2>
+            <p className="mt-2 text-secondary-light/70 dark:text-secondary-dark/70">
+              Join our platform today
+            </p>
+          </div>
 
-        <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-          <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-            {authError && (
-              <div className="mb-4 bg-red-50 border border-red-200 text-red-600 rounded-md p-4 text-sm">
-                {authError}
-              </div>
-            )}
+          {authError && (
+            <div className="mb-6 p-4 rounded-lg bg-red-50/50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 animate-slideIn">
+              <p className="text-sm text-red-600 dark:text-red-400">{authError}</p>
+            </div>
+          )}
 
-            <form className="space-y-6" onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="animate-fadeIn">
               <FormInput
                 label="Full Name"
                 type="text"
@@ -105,18 +89,24 @@ const SignUp = () => {
                 onChange={handleChange}
                 error={formErrors.name}
                 required
+                placeholder="Enter your full name"
               />
+            </div>
 
+            <div className="animate-fadeIn">
               <FormInput
-                label="Email address"
+                label="Email Address"
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
                 error={formErrors.email}
                 required
+                placeholder="Enter your email"
               />
+            </div>
 
+            <div className="animate-fadeIn">
               <FormInput
                 label="Password"
                 type="password"
@@ -125,8 +115,11 @@ const SignUp = () => {
                 onChange={handleChange}
                 error={formErrors.password}
                 required
+                placeholder="Create a password"
               />
+            </div>
 
+            <div className="animate-fadeIn">
               <FormInput
                 label="Confirm Password"
                 type="password"
@@ -135,20 +128,39 @@ const SignUp = () => {
                 onChange={handleChange}
                 error={formErrors.confirmPassword}
                 required
+                placeholder="Confirm your password"
               />
+            </div>
 
+            <div className="animate-fadeIn">
               <Button
                 type="submit"
-                className="w-full"
+                className="w-full button-glow bg-gradient-to-r from-primary-light to-indigo-500 dark:from-primary-dark dark:to-indigo-400"
                 disabled={isLoading}
               >
-                {isLoading ? 'Creating account...' : 'Create account'}
+                {isLoading ? (
+                  <div className="flex items-center justify-center">
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                    Creating account...
+                  </div>
+                ) : (
+                  'Create account'
+                )}
               </Button>
-            </form>
-          </div>
+            </div>
+          </form>
+
+          <p className="mt-8 text-center text-sm text-secondary-light/70 dark:text-secondary-dark/70 animate-fadeIn">
+            Already have an account?{' '}
+            <Link
+              to="/login"
+              className="text-primary-light dark:text-primary-dark hover:opacity-80 transition-opacity font-medium"
+            >
+              Sign in
+            </Link>
+          </p>
         </div>
       </div>
-      <Footer />
     </div>
   );
 };

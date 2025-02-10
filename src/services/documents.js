@@ -50,5 +50,15 @@ export const documentService = {
     } catch (error) {
       throw error;
     }
+  },
+
+  generateDocumentation: async (params) => {
+    try {
+      const response = await api.post('/documentation/generate', params);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
   }
+
 };

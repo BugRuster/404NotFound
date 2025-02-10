@@ -1,226 +1,120 @@
-// src/pages/dashboard/GitHubDocumentation.jsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '../../components/common/Button';
-import FormInput from '../../components/common/FormInput';
-import { Github, GitBranch, Folder, File, ChevronRight } from 'lucide-react';
+import { 
+  Github, Loader, Sparkles, RefreshCw, 
+  BookOpen, Code2, Braces 
+} from 'lucide-react';
+import { githubService } from '../../services/github';
+import { documentService } from '../../services/documents';
+import AiSettingsForm from '../../components/docs/AiSettingsForm';
+import DocumentationViewer from '../../components/docs/DocumentationViewer';
+import GitHubConnectPrompt from '../../components/github/GitHubConnectPrompt';
+import { logger } from '../../utils/logger';
 
 const GitHubDocumentation = () => {
-  const [step, setStep] = useState(1);
+  const [repositories, setRepositories] = useState([]);
   const [selectedRepo, setSelectedRepo] = useState(null);
-  const [selectedBranch, setSelectedBranch] = useState(null);
-  const [selectedFiles, setSelectedFiles] = useState([]);
-  const [projectInfo, setProjectInfo] = useState({
-    title: '',
-    description: '',
-    purpose: '',
-    functionality: ''
-  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [generatedDoc, setGeneratedDoc] = useState(null);
+  const [isGithubConnected, setIsGithubConnected] = useState(false);
 
-  // Mock data (will be replaced with API calls)
-  const mockRepos = [
-    { id: 1, name: 'my-project', description: 'A sample project' },
-    { id: 2, name: 'another-repo', description: 'Another repository' }
-  ];
+  useEffect(() => {
+    checkGithubConnection();
+  }, []);
 
-  const mockBranches = [
-    { name: 'main' },
-    { name: 'develop' },
-    { name: 'feature/auth' }
-  ];
-
-  const mockFiles = [
-    { path: 'src/components/Button.jsx', type: 'file' },
-    { path: 'src/components/Form.jsx', type: 'file' },
-    { path: 'src/utils', type: 'directory', children: [
-      { path: 'src/utils/api.js', type: 'file' },
-      { path: 'src/utils/helpers.js', type: 'file' }
-    ]}
-  ];
-
-  const renderStep = () => {
-    switch (step) {
-      case 1:
-        return (
-          <div className="space-y-6">
-            <h2 className="text-xl font-semibold">Select Repository</h2>
-            <div className="grid gap-4">
-              {mockRepos.map(repo => (
-                <div
-                  key={repo.id}
-                  onClick={() => setSelectedRepo(repo)}
-                  className={`
-                    p-4 border rounded-lg cursor-pointer
-                    ${selectedRepo?.id === repo.id ? 'border-indigo-500' : 'border-gray-200'}
-                  `}
-                >
-                  <div className="flex items-center">
-                    <Github className="w-5 h-5 mr-2" />
-                    <h3 className="font-medium">{repo.name}</h3>
-                  </div>
-                  <p className="text-sm text-gray-500 mt-1">{repo.description}</p>
-                </div>
-              ))}
-            </div>
-            <Button
-              disabled={!selectedRepo}
-              onClick={() => setStep(2)}
-              className="mt-4"
-            >
-              Next
-            </Button>
-          </div>
-        );
-
-      case 2:
-        return (
-          <div className="space-y-6">
-            <h2 className="text-xl font-semibold">Select Branch</h2>
-            <div className="grid gap-4">
-              {mockBranches.map(branch => (
-                <div
-                  key={branch.name}
-                  onClick={() => setSelectedBranch(branch)}
-                  className={`
-                    p-4 border rounded-lg cursor-pointer
-                    ${selectedBranch?.name === branch.name ? 'border-indigo-500' : 'border-gray-200'}
-                  `}
-                >
-                  <div className="flex items-center">
-                    <GitBranch className="w-5 h-5 mr-2" />
-                    <span>{branch.name}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="flex justify-between">
-              <Button variant="secondary" onClick={() => setStep(1)}>
-                Back
-              </Button>
-              <Button
-                disabled={!selectedBranch}
-                onClick={() => setStep(3)}
-              >
-                Next
-              </Button>
-            </div>
-          </div>
-        );
-
-      case 3:
-        return (
-          <div className="space-y-6">
-            <h2 className="text-xl font-semibold">Select Files</h2>
-            <div className="border rounded-lg divide-y">
-              {mockFiles.map((file, index) => (
-                <div
-                  key={file.path}
-                  className="p-4 flex items-center"
-                >
-                  {file.type === 'file' ? (
-                    <File className="w-5 h-5 mr-2" />
-                  ) : (
-                    <Folder className="w-5 h-5 mr-2" />
-                  )}
-                  <span>{file.path}</span>
-                </div>
-              ))}
-            </div>
-            <div className="flex justify-between">
-              <Button variant="secondary" onClick={() => setStep(2)}>
-                Back
-              </Button>
-              <Button onClick={() => setStep(4)}>
-                Next
-              </Button>
-            </div>
-          </div>
-        );
-
-      case 4:
-        return (
-          <div className="space-y-6">
-            <h2 className="text-xl font-semibold">Project Information</h2>
-            <div className="space-y-4">
-              <FormInput
-                label="Project Title"
-                value={projectInfo.title}
-                onChange={(e) => setProjectInfo({...projectInfo, title: e.target.value})}
-              />
-              <FormInput
-                label="Description"
-                type="textarea"
-                value={projectInfo.description}
-                onChange={(e) => setProjectInfo({...projectInfo, description: e.target.value})}
-              />
-              <FormInput
-                label="Project Purpose"
-                type="textarea"
-                value={projectInfo.purpose}
-                onChange={(e) => setProjectInfo({...projectInfo, purpose: e.target.value})}
-              />
-              <FormInput
-                label="Core Functionality"
-                type="textarea"
-                value={projectInfo.functionality}
-                onChange={(e) => setProjectInfo({...projectInfo, functionality: e.target.value})}
-              />
-            </div>
-            <div className="flex justify-between">
-              <Button variant="secondary" onClick={() => setStep(3)}>
-                Back
-              </Button>
-              <Button onClick={() => handleGenerateDocumentation()}>
-                Generate Documentation
-              </Button>
-            </div>
-          </div>
-        );
-
-      default:
-        return null;
+  const checkGithubConnection = () => {
+    const connected = githubService.isConnected();
+    setIsGithubConnected(connected);
+    if (connected) {
+      fetchRepositories();
     }
   };
 
-  const handleGenerateDocumentation = () => {
-    // This will be implemented later with the backend
-    console.log('Generating documentation with:', {
-      repository: selectedRepo,
-      branch: selectedBranch,
-      selectedFiles,
-      projectInfo
-    });
+  const fetchRepositories = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await githubService.getRepositories();
+      setRepositories(response.data);
+    } catch (err) {
+      setError('Failed to fetch repositories. Please try again.');
+      logger.error('Error fetching repositories:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGenerateDocumentation = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const params = {
+        repository: {
+          owner: selectedRepo.owner.login,
+          name: selectedRepo.name,
+          branch: 'main'
+        },
+        ...settings
+      };
+
+      const response = await documentService.generateDocumentation(params);
+      setGeneratedDoc(response.data);
+    } catch (err) {
+      setError('Failed to generate documentation. Please try again.');
+      logger.error('Error generating documentation:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateDoc = async (updatedDoc) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await documentService.updateDocument(updatedDoc._id, updatedDoc);
+      setGeneratedDoc(response.data);
+    } catch (err) {
+      setError('Failed to update documentation. Please try again.');
+      logger.error('Error updating documentation:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="max-w-3xl mx-auto py-6">
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">
-            Generate Documentation from GitHub
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
+      <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center gap-3 mb-8">
+          <Sparkles className="w-8 h-8 text-indigo-400" />
+          <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">
+            AI Documentation Generator
           </h1>
         </div>
-        <div className="mt-4">
-          <nav className="flex items-center space-x-2">
-            {['Repository', 'Branch', 'Files', 'Information'].map((item, index) => (
-              <div key={item} className="flex items-center">
-                <div
-                  className={`
-                    flex items-center justify-center w-8 h-8 rounded-full
-                    ${step > index + 1 ? 'bg-green-500' : step === index + 1 ? 'bg-indigo-600' : 'bg-gray-200'}
-                    text-white text-sm font-medium
-                  `}
-                >
-                  {index + 1}
-                </div>
-                <span className="ml-2 text-sm font-medium text-gray-900">{item}</span>
-                {index < 3 && <ChevronRight className="w-5 h-5 mx-2 text-gray-400" />}
-              </div>
-            ))}
-          </nav>
-        </div>
-      </div>
 
-      {renderStep()}
+        {error && (
+          <div className="bg-red-900/50 border border-red-500/50 text-red-200 px-4 py-3 rounded-lg mb-6 backdrop-blur-sm">
+            {error}
+          </div>
+        )}
+
+        {!isGithubConnected ? (
+          <GitHubConnectPrompt />
+        ) : (
+          // Your existing repository selection and documentation generation UI
+          !generatedDoc ? (
+            <div className="grid lg:grid-cols-2 gap-8">
+              {/* ... Your existing repository selection code ... */}
+            </div>
+          ) : (
+            <DocumentationViewer 
+              documentation={generatedDoc}
+              onUpdate={handleUpdateDoc}
+            />
+          )
+        )}
+      </div>
     </div>
   );
 };
