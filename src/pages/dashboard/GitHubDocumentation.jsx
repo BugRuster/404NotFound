@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Button } from '../../components/common/Button';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   Github, Loader, Sparkles, RefreshCw, 
   BookOpen, Code2, Braces 
@@ -7,81 +7,100 @@ import {
 import { githubService } from '../../services/github';
 import { documentService } from '../../services/documents';
 import AiSettingsForm from '../../components/docs/AiSettingsForm';
-import DocumentationViewer from '../../components/docs/DocumentationViewer';
 import GitHubConnectPrompt from '../../components/github/GitHubConnectPrompt';
 import { logger } from '../../utils/logger';
 
 const GitHubDocumentation = () => {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [repositories, setRepositories] = useState([]);
   const [selectedRepo, setSelectedRepo] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [generatedDoc, setGeneratedDoc] = useState(null);
+  const [generating, setGenerating] = useState(false);
   const [isGithubConnected, setIsGithubConnected] = useState(false);
-
-  useEffect(() => {
-    checkGithubConnection();
-  }, []);
-
-  const checkGithubConnection = () => {
-    const connected = githubService.isConnected();
-    setIsGithubConnected(connected);
-    if (connected) {
-      fetchRepositories();
-    }
-  };
+  const [settings, setSettings] = useState({
+    style: 'formal',
+    programmingLanguage: 'javascript',  // Changed from language to programmingLanguage
+    pageCount: 4,
+    outputFormat: 'markdown',
+    userPrompt: ''
+});
 
   const fetchRepositories = async () => {
     try {
       setLoading(true);
       setError(null);
       const response = await githubService.getRepositories();
-      setRepositories(response.data);
+      if (response?.data?.data) {
+        setRepositories(response.data.data);
+      } else if (Array.isArray(response.data)) {
+        setRepositories(response.data);
+      }
+      setIsGithubConnected(true);
     } catch (err) {
-      setError('Failed to fetch repositories. Please try again.');
-      logger.error('Error fetching repositories:', err);
+      setError('Failed to fetch repositories');
+      setIsGithubConnected(false);
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const status = searchParams.get('status');
+    if (status === 'success' || githubService.isConnected()) {
+      fetchRepositories();
+    }
+  }, [searchParams]);
 
   const handleGenerateDocumentation = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const params = {
-        repository: {
-          owner: selectedRepo.owner.login,
-          name: selectedRepo.name,
-          branch: 'main'
-        },
-        ...settings
-      };
-
-      const response = await documentService.generateDocumentation(params);
-      setGeneratedDoc(response.data);
-    } catch (err) {
-      setError('Failed to generate documentation. Please try again.');
-      logger.error('Error generating documentation:', err);
-    } finally {
-      setLoading(false);
+    if (!selectedRepo) {
+        setError('Please select a repository first');
+        return;
     }
-  };
 
-  const handleUpdateDoc = async (updatedDoc) => {
     try {
-      setLoading(true);
-      setError(null);
-      const response = await documentService.updateDocument(updatedDoc._id, updatedDoc);
-      setGeneratedDoc(response.data);
+        setGenerating(true);
+        setError(null);
+
+        console.log('Current settings:', settings);
+        
+        // Create the payload making sure to keep programmingLanguage
+        const payload = {
+            style: settings.style,
+            programmingLanguage: settings.programmingLanguage || 'javascript',
+            pageCount: parseInt(settings.pageCount),
+            outputFormat: settings.outputFormat || 'markdown',
+            userPrompt: settings.userPrompt || '',
+            repository: {
+                owner: selectedRepo.owner.login,
+                name: selectedRepo.name,
+                branch: selectedRepo.default_branch || 'main'
+            }
+        };
+
+        console.log('Sending payload:', payload);
+
+        const response = await documentService.generateDocumentation(payload);
+        
+        if (response?.data) {
+            navigate('/dashboard/documents/view', { 
+                state: { documentation: response.data }
+            });
+        } else {
+            navigate('/dashboard/documents/view', { 
+                state: { documentation: response }
+            });
+        }
     } catch (err) {
-      setError('Failed to update documentation. Please try again.');
-      logger.error('Error updating documentation:', err);
+        const errorMessage = err.response?.data?.message || 
+            'Failed to generate documentation. Please try again.';
+        setError(errorMessage);
+        console.error('Generation error:', err);
     } finally {
-      setLoading(false);
+        setGenerating(false);
     }
-  };
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
@@ -99,20 +118,79 @@ const GitHubDocumentation = () => {
           </div>
         )}
 
-        {!isGithubConnected ? (
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader className="w-8 h-8 animate-spin text-indigo-400" />
+          </div>
+        ) : !isGithubConnected ? (
           <GitHubConnectPrompt />
-        ) : (
-          // Your existing repository selection and documentation generation UI
-          !generatedDoc ? (
-            <div className="grid lg:grid-cols-2 gap-8">
-              {/* ... Your existing repository selection code ... */}
+        ) : repositories.length > 0 ? (
+          <div className="grid lg:grid-cols-2 gap-8">
+            {/* Repository Selection */}
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold mb-4">Select Repository</h2>
+              <div className="space-y-2 max-h-[600px] overflow-y-auto pr-2">
+                {repositories.map(repo => (
+                  <button
+                    key={repo.id}
+                    onClick={() => setSelectedRepo(repo)}
+                    className={`w-full p-4 rounded-lg border transition-all ${
+                      selectedRepo?.id === repo.id
+                        ? 'bg-indigo-600/20 border-indigo-500'
+                        : 'bg-gray-800/50 border-gray-700/50 hover:border-indigo-500/50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Github className="w-5 h-5" />
+                      <span className="font-medium">{repo.name}</span>
+                    </div>
+                    {repo.description && (
+                      <p className="mt-2 text-sm text-gray-400">{repo.description}</p>
+                    )}
+                  </button>
+                ))}
+              </div>
             </div>
-          ) : (
-            <DocumentationViewer 
-              documentation={generatedDoc}
-              onUpdate={handleUpdateDoc}
-            />
-          )
+
+            {/* Settings Panel */}
+            <div className="space-y-6">
+              {selectedRepo ? (
+                <>
+                  {/* Repository Info */}
+                  <div className="p-6 bg-gray-800/50 rounded-lg border border-gray-700">
+                    <h3 className="text-lg font-semibold mb-4">Selected Repository</h3>
+                    <div className="space-y-2">
+                      <p><span className="text-gray-400">Name:</span> {selectedRepo.name}</p>
+                      <p><span className="text-gray-400">Owner:</span> {selectedRepo.owner.login}</p>
+                      <p><span className="text-gray-400">Default Branch:</span> {selectedRepo.default_branch}</p>
+                    </div>
+                  </div>
+
+                  {/* AI Settings Form */}
+                  <AiSettingsForm 
+                    settings={settings}
+                    onSettingsChange={setSettings}
+                    onGenerate={handleGenerateDocumentation}
+                    generating={generating}
+                  />
+                </>
+              ) : (
+                <div className="p-6 bg-gray-800/50 rounded-lg border border-gray-700 text-center text-gray-400">
+                  <p>Select a repository to configure documentation settings.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-gray-400">No repositories found. Please make sure you have repositories in your GitHub account.</p>
+            <button 
+              onClick={fetchRepositories}
+              className="mt-4 text-indigo-400 hover:text-indigo-300"
+            >
+              Refresh Repositories
+            </button>
+          </div>
         )}
       </div>
     </div>

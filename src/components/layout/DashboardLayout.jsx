@@ -1,6 +1,6 @@
 // src/components/layout/DashboardLayout.jsx
 import React, { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   FileText, 
@@ -12,12 +12,13 @@ import {
   Moon
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
+import { useAuth } from '../../hooks/useAuth';
 
-const DashboardLayout = ({ children }) => {
+const DashboardLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const navigate = useNavigate();
   const location = useLocation();
   const { isDark, toggleTheme } = useTheme();
+  const { logout } = useAuth();
 
   const navigationItems = [
     { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
@@ -25,33 +26,35 @@ const DashboardLayout = ({ children }) => {
     { name: 'Settings', icon: Settings, path: '/dashboard/settings' },
   ];
 
-  const handleLogout = () => {
-    localStorage.removeItem('isAuthenticated');
-    navigate('/login');
+  const isActivePath = (path) => {
+    if (path === '/dashboard') {
+      return location.pathname === path;
+    }
+    return location.pathname.startsWith(path);
   };
 
-  const isActivePath = (path) => location.pathname === path;
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background-light to-surface-light dark:from-background-dark dark:to-surface-dark">
+    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Mobile Sidebar Toggle */}
       <div className="lg:hidden fixed top-4 left-4 z-50">
         <button
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="p-2 rounded-lg glass-panel button-glow"
+          className="p-2 rounded-lg bg-white dark:bg-gray-800 shadow-lg"
         >
           {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
 
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-40 w-64 glass-panel transform 
-        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
-        lg:translate-x-0 transition-transform duration-300 ease-in-out`}>
+      <aside
+        className={`fixed inset-y-0 left-0 z-40 w-64 bg-white dark:bg-gray-800 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
         <div className="h-full flex flex-col">
           {/* Logo */}
-          <div className="px-6 py-4 border-b border-gray-200/10 dark:border-gray-700/10">
-            <Link to="/dashboard" className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-light to-indigo-500 dark:from-primary-dark dark:to-indigo-400">
+          <div className="px-6 py-4 border-b dark:border-gray-700">
+            <Link to="/dashboard" className="text-xl font-bold">
               DocsPlatform
             </Link>
           </div>
@@ -62,11 +65,11 @@ const DashboardLayout = ({ children }) => {
               <Link
                 key={item.name}
                 to={item.path}
-                className={`flex items-center px-3 py-2 rounded-lg transition-all duration-200
-                  ${isActivePath(item.path)
-                    ? 'bg-primary-light/10 dark:bg-primary-dark/10 text-primary-light dark:text-primary-dark'
-                    : 'text-secondary-light dark:text-secondary-dark hover:bg-gray-100/50 dark:hover:bg-gray-800/50'
-                  }`}
+                className={`flex items-center px-3 py-2 rounded-lg transition-colors ${
+                  isActivePath(item.path)
+                    ? 'bg-indigo-50 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300'
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
               >
                 <item.icon className="mr-3 h-5 w-5" />
                 {item.name}
@@ -75,30 +78,29 @@ const DashboardLayout = ({ children }) => {
           </nav>
 
           {/* Footer Actions */}
-          <div className="px-4 py-6 border-t border-gray-200/10 dark:border-gray-700/10 space-y-2">
+          <div className="px-4 py-6 border-t dark:border-gray-700">
             <button
               onClick={toggleTheme}
-              className="flex items-center w-full px-3 py-2 text-secondary-light dark:text-secondary-dark rounded-lg hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-colors"
+              className="flex items-center w-full px-3 py-2 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
             >
               {isDark ? <Sun className="mr-3 h-5 w-5" /> : <Moon className="mr-3 h-5 w-5" />}
               {isDark ? 'Light Mode' : 'Dark Mode'}
             </button>
-            
             <button
-              onClick={handleLogout}
-              className="flex items-center w-full px-3 py-2 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-50/50 dark:hover:bg-red-900/20 transition-colors"
+              onClick={logout}
+              className="mt-2 flex items-center w-full px-3 py-2 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
             >
               <LogOut className="mr-3 h-5 w-5" />
               Logout
             </button>
           </div>
         </div>
-      </div>
+      </aside>
 
       {/* Main Content */}
-      <div className="lg:pl-64 min-h-screen">
-        <main className="p-4 sm:p-6 lg:p-8 animate-fadeIn">
-          {children}
+      <div className="flex-1 lg:pl-64">
+        <main className="p-4 sm:p-6 lg:p-8">
+          <Outlet />
         </main>
       </div>
     </div>

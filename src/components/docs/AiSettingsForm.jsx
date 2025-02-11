@@ -1,109 +1,145 @@
-// src/components/docs/AiSettingsForm.jsx
 import React from 'react';
-import { Sliders } from 'lucide-react';
-import FormInput from '../common/FormInput';
+import { BookOpen, MessageSquare, Settings2, Code2 } from 'lucide-react';
 
-const AiSettingsForm = ({ settings, onSettingsChange }) => {
-  const programmingLanguages = [
-    'javascript', 'python', 'java', 'c++', 'ruby', 'go', 
-    'rust', 'typescript', 'php', 'swift', 'kotlin'
-  ];
+const AiSettingsForm = ({ settings, onSettingsChange, onGenerate, generating }) => {
+  const handleLanguageChange = (e) => {
+    const newSettings = { 
+      ...settings, 
+      programmingLanguage: e.target.value 
+    };
+    console.log('Settings after language change:', newSettings);
+    onSettingsChange(newSettings);
+  };
+  const handleStyleChange = (e) => {
+    onSettingsChange({
+      ...settings,
+      style: e.target.value
+    });
+  };
+
+  const handlePageCountChange = (e) => {
+    onSettingsChange({
+      ...settings,
+      pageCount: parseInt(e.target.value)
+    });
+  };
+
+  const handlePromptChange = (e) => {
+    onSettingsChange({
+      ...settings,
+      userPrompt: e.target.value
+    });
+  };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+    <div className="p-6 bg-gray-800/50 rounded-lg border border-gray-700 space-y-6">
       <div className="flex items-center gap-2 mb-4">
-        <Sliders size={20} className="text-indigo-600" />
-        <h3 className="text-lg font-medium">Documentation Settings</h3>
+        <Settings2 className="w-5 h-5 text-indigo-400" />
+        <h3 className="text-lg font-semibold">Generation Settings</h3>
       </div>
-      
+
       <div className="space-y-4">
         {/* Documentation Style */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Documentation Style
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            <div className="flex items-center gap-2">
+              <BookOpen className="w-4 h-4" />
+              Documentation Style
+            </div>
           </label>
           <select
             value={settings.style}
-            onChange={(e) => onSettingsChange({
-              ...settings,
-              style: e.target.value
-            })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            onChange={handleStyleChange}
+            className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
           >
             <option value="formal">Formal</option>
-            <option value="normal">Normal</option>
+            <option value="technical">Technical</option>
             <option value="casual">Casual</option>
+            <option value="tutorial">Tutorial-style</option>
           </select>
         </div>
 
         {/* Programming Language */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Programming Language
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            <div className="flex items-center gap-2">
+              <Code2 className="w-4 h-4" />
+              Programming Language
+            </div>
           </label>
           <select
             value={settings.language}
-            onChange={(e) => onSettingsChange({
-              ...settings,
-              language: e.target.value
-            })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            onChange={handleLanguageChange}
+            className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
           >
-            {programmingLanguages.map(lang => (
-              <option key={lang} value={lang}>
-                {lang.charAt(0).toUpperCase() + lang.slice(1)}
-              </option>
-            ))}
+            <option value="javascript">JavaScript</option>
+            <option value="typescript">TypeScript</option>
+            <option value="python">Python</option>
+            <option value="java">Java</option>
+            <option value="cpp">C++</option>
+            <option value="csharp">C#</option>
+            <option value="go">Go</option>
+            <option value="ruby">Ruby</option>
+            <option value="php">PHP</option>
+            <option value="swift">Swift</option>
+            <option value="rust">Rust</option>
           </select>
         </div>
 
-        {/* Page Count */}
-        <FormInput
-          label="Number of Pages"
-          type="number"
-          value={settings.pageCount}
-          onChange={(e) => onSettingsChange({
-            ...settings,
-            pageCount: parseInt(e.target.value)
-          })}
-          min="1"
-          max="50"
-        />
-
-        {/* Output Format */}
+        {/* Documentation Length */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Output Format
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            <div className="flex items-center gap-2">
+              <BookOpen className="w-4 h-4" />
+              Documentation Length
+            </div>
           </label>
           <select
-            value={settings.outputFormat}
-            onChange={(e) => onSettingsChange({
-              ...settings,
-              outputFormat: e.target.value
-            })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            value={settings.pageCount}
+            onChange={handlePageCountChange}
+            className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
           >
-            <option value="markdown">Markdown</option>
-            <option value="text">Plain Text</option>
+            <option value={2}>Brief (2 pages)</option>
+            <option value={4}>Medium (4 pages)</option>
+            <option value={6}>Detailed (6 pages)</option>
+            <option value={8}>Comprehensive (8 pages)</option>
           </select>
         </div>
 
-        {/* Additional Instructions */}
+        {/* Custom Instructions */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Additional Instructions
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            <div className="flex items-center gap-2">
+              <MessageSquare className="w-4 h-4" />
+              Custom Instructions (Optional)
+            </div>
           </label>
           <textarea
             value={settings.userPrompt}
-            onChange={(e) => onSettingsChange({
-              ...settings,
-              userPrompt: e.target.value
-            })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            rows={4}
-            placeholder="Any specific focus areas or requirements..."
+            onChange={handlePromptChange}
+            placeholder="Add any specific requirements or focus areas for the documentation..."
+            className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent h-32 resize-none"
           />
         </div>
+
+        {/* Generate Button */}
+        <button
+          onClick={onGenerate}
+          disabled={generating}
+          className="w-full mt-6 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-800 disabled:cursor-not-allowed text-white py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 font-medium"
+        >
+          {generating ? (
+            <>
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <span>Generating Documentation...</span>
+            </>
+          ) : (
+            <>
+              <BookOpen className="w-5 h-5" />
+              <span>Generate Documentation</span>
+            </>
+          )}
+        </button>
       </div>
     </div>
   );

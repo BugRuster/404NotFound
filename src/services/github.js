@@ -2,76 +2,60 @@
 import api from './api';
 
 export const githubService = {
-  // Store GitHub token
-  storeToken: (token) => {
-    localStorage.setItem('github_token', token);
-  },
-
-  // Check if GitHub is connected
-  isConnected: () => {
-    return !!localStorage.getItem('github_token');
-  },
-
-  // Remove GitHub token
-  disconnect: () => {
-    localStorage.removeItem('github_token');
-  },
-
-  // Get GitHub auth URL
   getAuthUrl: async () => {
     try {
-      const response = await api.get('/github/auth-url');
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
-
-  // Initialize GitHub connection
-  initiateConnection: async () => {
-    try {
-      const { data } = await api.get('/github/auth-url');
-      window.location.href = data.url; // Redirect to GitHub auth
-    } catch (error) {
-      throw error;
-    }
-  },
-
-  // Existing methods...
-  getRepositories: async () => {
-    try {
-      const response = await api.get('/github/repositories');
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
-  handleCallback: async (code, state) => {
-    try {
-      const response = await api.get('/github/callback', { params: { code, state } });
+      const response = await api.get('/api/v1/github/auth-url');
       return response;
     } catch (error) {
+      console.error('GitHub auth URL error:', error);
       throw error;
     }
   },
 
-  getBranches: async (owner, repo) => {
+  isConnected: () => {
+    return localStorage.getItem('githubConnected') === 'true';
+  },
+
+  getRepositories: async () => {
     try {
-      const response = await api.get(`/github/${owner}/${repo}/branches`);
-      return response.data;
+      const response = await api.get('/api/v1/github/repositories');
+      console.log('GitHub repos response:', response);
+      
+      if (response.data) {
+        localStorage.setItem('githubConnected', 'true');
+      }
+      
+      return response;
     } catch (error) {
+      if (error.response?.status === 401) {
+        localStorage.removeItem('githubConnected');
+      }
       throw error;
     }
   },
 
-  getFiles: async (owner, repo, branch) => {
+  handleCallback: async (code, state) => {
     try {
-      const response = await api.get(`/github/${owner}/${repo}/files`, {
-        params: { branch }
+      const response = await api.post('/api/v1/github/callback', {
+        code,
+        state
       });
-      return response.data;
+      
+      if (response.data?.status === 'success') {
+        localStorage.setItem('githubConnected', 'true');
+      }
+      
+      return response;
     } catch (error) {
+      localStorage.removeItem('githubConnected');
       throw error;
     }
+  },
+
+  disconnect: () => {
+    localStorage.removeItem('githubConnected');
+    localStorage.removeItem('github_token');
   }
 };
+
+export default githubService;

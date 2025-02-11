@@ -2,20 +2,45 @@
 import api from './api';
 
 export const documentService = {
-  // Get all documents
-  getAllDocuments: async () => {
+  generateDocumentation: async (params) => {
     try {
-      const response = await api.get('/documents');
+      // Keep the exact same payload structure
+      const payload = {
+        style: params.style || 'formal',
+        programmingLanguage: params.programmingLanguage || 'javascript',
+        pageCount: parseInt(params.pageCount) || 4,
+        outputFormat: params.outputFormat || 'markdown',
+        userPrompt: params.userPrompt || '',
+        repository: {
+          owner: params.repository.owner,
+          name: params.repository.name,
+          branch: params.repository.branch || 'main'
+        }
+      };
+
+      console.log('Sending payload to backend:', payload);
+
+      const response = await api.post('/api/v1/documentation/generate', payload);
+
+      if (!response.data) {
+        throw new Error('Invalid response from server');
+      }
+
       return response.data;
     } catch (error) {
+      console.error('Documentation generation error:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data
+      });
       throw error;
     }
   },
 
-  // Create new document
-  createDocument: async (documentData) => {
+  // Get all documents
+  getAllDocuments: async () => {
     try {
-      const response = await api.post('/documents', documentData);
+      const response = await api.get('/api/v1/documents');
       return response.data;
     } catch (error) {
       throw error;
@@ -25,7 +50,7 @@ export const documentService = {
   // Get single document
   getDocument: async (id) => {
     try {
-      const response = await api.get(`/documents/${id}`);
+      const response = await api.get(`/api/v1/documents/${id}`);
       return response.data;
     } catch (error) {
       throw error;
@@ -35,7 +60,7 @@ export const documentService = {
   // Update document
   updateDocument: async (id, documentData) => {
     try {
-      const response = await api.put(`/documents/${id}`, documentData);
+      const response = await api.put(`/api/v1/documents/${id}`, documentData);
       return response.data;
     } catch (error) {
       throw error;
@@ -45,20 +70,12 @@ export const documentService = {
   // Delete document
   deleteDocument: async (id) => {
     try {
-      const response = await api.delete(`/documents/${id}`);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
-
-  generateDocumentation: async (params) => {
-    try {
-      const response = await api.post('/documentation/generate', params);
+      const response = await api.delete(`/api/v1/documents/${id}`);
       return response.data;
     } catch (error) {
       throw error;
     }
   }
-
 };
+
+export default documentService;

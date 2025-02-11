@@ -6,7 +6,7 @@ export const authService = {
   login: async (credentials) => {
     try {
       logger.info('Logging in user:', credentials.email);
-      const response = await api.post('/auth/login', credentials);
+      const response = await api.post('/api/v1/auth/login', credentials);
       
       if (response.data.data.token) {
         localStorage.setItem('token', response.data.data.token);
@@ -23,7 +23,7 @@ export const authService = {
   register: async (userData) => {
     try {
       logger.info('Registering new user:', userData.email);
-      const response = await api.post('/auth/register', userData);
+      const response = await api.post('/api/v1/auth/register', userData);
       
       if (response.data.data.token) {
         localStorage.setItem('token', response.data.data.token);

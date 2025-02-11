@@ -1,4 +1,3 @@
-// src/components/github/GitHubCallback.jsx
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { githubService } from '../../services/github';
@@ -19,18 +18,24 @@ const GitHubCallback = () => {
           throw new Error('No code received from GitHub');
         }
 
-        // Handle the callback through your backend
+        // Handle the GitHub callback
         const response = await githubService.handleCallback(code, state);
         
-        if (response.data?.token) {
-          githubService.storeToken(response.data.token);
-          navigate('/dashboard/documentation');
+        if (response.data?.status === 'success') {
+          // Store connection status
+          githubService.storeToken(response.data?.data?.accessToken);
+          
+          // Navigate back to the documents page with success status
+          const redirectPath = '/dashboard/documents/new/github?status=success';
+          navigate(redirectPath, { replace: true });
         } else {
-          throw new Error('No token received from server');
+          throw new Error('GitHub connection failed');
         }
       } catch (err) {
-        setError(err.message);
-        setTimeout(() => navigate('/dashboard'), 3000);
+        console.error('Callback error:', err);
+        setError('Failed to complete GitHub connection');
+        // Navigate back with error
+        navigate('/dashboard/documents/new/github?error=connection_failed', { replace: true });
       }
     };
 
@@ -43,7 +48,7 @@ const GitHubCallback = () => {
         <div className="text-center text-white">
           <h2 className="text-xl font-semibold mb-2">Connection Failed</h2>
           <p className="text-red-400">{error}</p>
-          <p className="text-gray-400 mt-2">Redirecting to dashboard...</p>
+          <p className="text-gray-400 mt-2">Redirecting...</p>
         </div>
       </div>
     );

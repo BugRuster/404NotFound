@@ -1,14 +1,32 @@
-// src/components/github/GitHubConnectPrompt.jsx
-import React from 'react';
-import { Github, ArrowRight } from 'lucide-react';
+import React, { useState } from 'react';
+import { Github, ArrowRight, Loader } from 'lucide-react';
 import { githubService } from '../../services/github';
 
 const GitHubConnectPrompt = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+
   const handleConnect = async () => {
     try {
-      await githubService.initiateConnection();
+      setIsLoading(true);
+      setError(null);
+      
+      // Store current path for redirect after auth
+      localStorage.setItem('githubRedirectPath', window.location.pathname);
+      
+      const response = await githubService.getAuthUrl();
+      console.log('GitHub Auth Response:', response);
+
+      if (response?.data?.data?.url) {
+        window.location.href = response.data.data.url;
+      } else {
+        throw new Error('Invalid response from server');
+      }
     } catch (error) {
-      console.error('Failed to connect to GitHub:', error);
+      console.error('GitHub connection error:', error);
+      setError(error.message || 'Failed to connect to GitHub. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -28,14 +46,30 @@ const GitHubConnectPrompt = () => {
         <p className="text-gray-300 mb-8">
           To generate documentation from your repositories, you'll need to connect your GitHub account first.
         </p>
+
+        {error && (
+          <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
+            {error}
+          </div>
+        )}
         
         <button
           onClick={handleConnect}
-          className="flex items-center justify-center gap-2 w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 px-4 rounded-lg transition-colors"
+          disabled={isLoading}
+          className="flex items-center justify-center gap-2 w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <Github className="w-5 h-5" />
-          Connect GitHub
-          <ArrowRight className="w-5 h-5" />
+          {isLoading ? (
+            <>
+              <Loader className="w-5 h-5 animate-spin" />
+              Connecting...
+            </>
+          ) : (
+            <>
+              <Github className="w-5 h-5" />
+              Connect GitHub
+              <ArrowRight className="w-5 h-5" />
+            </>
+          )}
         </button>
       </div>
     </div>
