@@ -3,9 +3,7 @@
 import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { useAuth } from "../hooks/useAuth"
-import { Button } from "../components/common/Button"
-import FormInput from "../components/common/FormInput"
-import { LogIn } from "lucide-react"
+import { ArrowRight } from "lucide-react"
 
 const Login = () => {
   const [credentials, setCredentials] = useState({
@@ -34,92 +32,78 @@ const Login = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-secondary-50 dark:bg-secondary-900 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-secondary-900 dark:text-white">
-            Sign in to your account
-          </h2>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-black via-white to-black p-4">
+      <div className="w-full max-w-xl bg-black rounded-3xl p-8 md:p-12">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">Login to Your Account</h1>
+          <p className="text-gray-400 max-w-md mx-auto">
+          Streamline Your Documentation - Secure, Fast, and Efficient
+          </p>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
-            <div className="rounded-md bg-red-50 dark:bg-red-900/50 p-4">
-              <p className="text-sm text-red-700 dark:text-red-200">{error}</p>
+            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
+              <p className="text-red-400 text-sm">{error}</p>
             </div>
           )}
-          <div className="rounded-md shadow-sm -space-y-px">
-            <FormInput
-              id="email-address"
-              name="email"
+
+          <div className="space-y-4">
+            <input
               type="email"
-              autoComplete="email"
-              required
-              placeholder="Email address"
+              name="email"
               value={credentials.email}
               onChange={handleChange}
-              className="rounded-t-md"
-            />
-            <FormInput
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="current-password"
+              placeholder="Email"
               required
-              placeholder="Password"
+              className="w-full bg-transparent border border-gray-800 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 transition-colors"
+            />
+
+            <input
+              type="password"
+              name="password"
               value={credentials.password}
               onChange={handleChange}
-              className="rounded-b-md"
+              placeholder="Password"
+              required
+              className="w-full bg-transparent border border-gray-800 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 transition-colors"
             />
           </div>
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <input
-                id="remember-me"
-                name="remember-me"
-                type="checkbox"
-                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-secondary-300 rounded"
-              />
-              <label htmlFor="remember-me" className="ml-2 block text-sm text-secondary-900 dark:text-secondary-300">
-                Remember me
-              </label>
-            </div>
-
-            <div className="text-sm">
-              <Link to="/forgot-password" className="font-medium text-primary-600 hover:text-primary-500">
-                Forgot your password?
-              </Link>
-            </div>
-          </div>
-
-          <div>
-            <Button
-              type="submit"
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <svg className="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  />
-                </svg>
-              ) : (
-                <LogIn className="w-5 h-5 mr-2" />
-              )}
-              Sign in
-            </Button>
-          </div>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full bg-white text-black font-medium py-3 px-4 rounded-lg flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoading ? (
+              <div className="w-6 h-6 border-2 border-black border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <>
+                Login to Your Account
+                <ArrowRight className="w-5 h-5" />
+              </>
+            )}
+          </button>
         </form>
-        <p className="mt-2 text-center text-sm text-secondary-600 dark:text-secondary-400">
-          Or{" "}
-          <Link to="/signup" className="font-medium text-primary-600 hover:text-primary-500">
-            create a new account
+
+        <div className="mt-8 flex items-center justify-between">
+          <Link to="/forgot-password" className="text-gray-400 hover:text-white text-sm transition-colors">
+            Forgot Password?
           </Link>
-        </p>
+          <div className="text-gray-400 text-sm">
+            Don't have an account yet?{" "}
+            <Link to="/signup" className="text-white hover:text-purple-300 transition-colors">
+              Register now!
+            </Link>
+          </div>
+        </div>
+
+        <div className="mt-12 flex items-center justify-between text-gray-600 text-sm">
+          <Link to="/privacy" className="hover:text-gray-400 transition-colors">
+            Privacy Policy
+          </Link>
+          <span>Copyright @buguster 2025</span>
+        </div>
       </div>
     </div>
   )

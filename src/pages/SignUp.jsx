@@ -1,12 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { Link } from "react-router-dom"
-import FormInput from "../components/common/FormInput"
-import { Button } from "../components/common/Button"
-import useAuth from "../hooks/useAuth"
+import { Link, useNavigate } from "react-router-dom"
+import { useAuth } from "../hooks/useAuth"
+import { ArrowRight } from "lucide-react"
 import { validateEmail, validatePassword } from "../utils/validation"
-import { UserPlus } from "lucide-react"
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
@@ -24,6 +22,7 @@ const SignUp = () => {
   })
 
   const { register, isLoading, error: authError } = useAuth()
+  const navigate = useNavigate()
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -54,6 +53,7 @@ const SignUp = () => {
           email: formData.email,
           password: formData.password,
         })
+        navigate("/dashboard")
       } catch (error) {
         console.error("Registration error:", error)
       }
@@ -61,99 +61,107 @@ const SignUp = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-secondary-50 dark:bg-secondary-900 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-secondary-900 dark:text-white">
-            Create your account
-          </h2>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-black via-white to-black p-4">
+      <div className="w-full max-w-xl bg-black rounded-3xl p-8 md:p-12">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">Create Your Account</h1>
+          <p className="text-gray-400 max-w-md mx-auto">
+            Join our platform and start managing your documentation with ease.
+          </p>
         </div>
 
-        {authError && (
-          <div className="rounded-md bg-red-50 dark:bg-red-900/50 p-4">
-            <p className="text-sm text-red-700 dark:text-red-200">{authError}</p>
-          </div>
-        )}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {authError && (
+            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
+              <p className="text-red-400 text-sm">{authError}</p>
+            </div>
+          )}
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm -space-y-px">
-            <FormInput
-              id="name"
-              name="name"
-              type="text"
-              autoComplete="name"
-              required
-              placeholder="Full Name"
-              value={formData.name}
-              onChange={handleChange}
-              error={formErrors.name}
-              className="rounded-t-md"
-            />
-            <FormInput
-              id="email-address"
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              placeholder="Email address"
-              value={formData.email}
-              onChange={handleChange}
-              error={formErrors.email}
-            />
-            <FormInput
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="new-password"
-              required
-              placeholder="Password"
-              value={formData.password}
-              onChange={handleChange}
-              error={formErrors.password}
-            />
-            <FormInput
-              id="confirm-password"
-              name="confirmPassword"
-              type="password"
-              autoComplete="new-password"
-              required
-              placeholder="Confirm Password"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              error={formErrors.confirmPassword}
-              className="rounded-b-md"
-            />
+          <div className="space-y-4">
+            <div>
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                placeholder="Full Name"
+                required
+                className="w-full bg-transparent border border-gray-800 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 transition-colors"
+              />
+              {formErrors.name && <p className="mt-1 text-sm text-red-400">{formErrors.name}</p>}
+            </div>
+
+            <div>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="Email"
+                required
+                className="w-full bg-transparent border border-gray-800 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 transition-colors"
+              />
+              {formErrors.email && <p className="mt-1 text-sm text-red-400">{formErrors.email}</p>}
+            </div>
+
+            <div>
+              <input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Password"
+                required
+                className="w-full bg-transparent border border-gray-800 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 transition-colors"
+              />
+              {formErrors.password && <p className="mt-1 text-sm text-red-400">{formErrors.password}</p>}
+            </div>
+
+            <div>
+              <input
+                type="password"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                placeholder="Confirm Password"
+                required
+                className="w-full bg-transparent border border-gray-800 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 transition-colors"
+              />
+              {formErrors.confirmPassword && <p className="mt-1 text-sm text-red-400">{formErrors.confirmPassword}</p>}
+            </div>
           </div>
 
-          <div>
-            <Button
-              type="submit"
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <svg className="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  />
-                </svg>
-              ) : (
-                <UserPlus className="w-5 h-5 mr-2" />
-              )}
-              Sign up
-            </Button>
-          </div>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full bg-white text-black font-medium py-3 px-4 rounded-lg flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoading ? (
+              <div className="w-6 h-6 border-2 border-black border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <>
+                Create Account
+                <ArrowRight className="w-5 h-5" />
+              </>
+            )}
+          </button>
         </form>
 
-        <p className="mt-2 text-center text-sm text-secondary-600 dark:text-secondary-400">
-          Already have an account?{" "}
-          <Link to="/login" className="font-medium text-primary-600 hover:text-primary-500">
-            Sign in
+        <div className="mt-8 text-center">
+          <div className="text-gray-400 text-sm">
+            Already have an account?{" "}
+            <Link to="/login" className="text-white hover:text-purple-300 transition-colors">
+              Login here
+            </Link>
+          </div>
+        </div>
+
+        <div className="mt-12 flex items-center justify-between text-gray-600 text-sm">
+          <Link to="/privacy" className="hover:text-gray-400 transition-colors">
+            Privacy Policy
           </Link>
-        </p>
+          <span>Copyright @buguster 2025</span>
+        </div>
       </div>
     </div>
   )
