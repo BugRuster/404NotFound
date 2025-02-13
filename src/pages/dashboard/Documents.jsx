@@ -1,149 +1,231 @@
-"use client"
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { documentService } from "../../services/documents";
+import { Button } from "../../components/common/Button";
+import Loading from "../../components/common/Loading";
+import { 
+  FileText, Plus, Book, Clock, Trash2, Edit2, 
+  Search, Filter, ArrowUpRight, Eye
+} from "lucide-react";
+import ConfirmDialog from "../../components/common/ConfirmDialog";
 
-import { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
-import { documentService } from "../../services/documents"
-import { Button } from "../../components/common/Button"
-import Loading from "../../components/common/Loading"
-import { FileText, Plus, Book, Clock, Trash2, Edit2 } from "lucide-react"
-import ConfirmDialog from "../../components/common/ConfirmDialog"
+const DocumentCard = ({ doc, onDelete, index }) => {
+  const navigate = useNavigate();
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <div 
+      className={`transform transition-all duration-500 hover:scale-102 ${
+        index % 2 === 0 ? 'hover:rotate-1' : 'hover:-rotate-1'
+      }`}
+      style={{
+        animationDelay: `${index * 100}ms`,
+      }}
+    >
+      <div
+        className="relative group bg-black border border-white/10 rounded-lg overflow-hidden"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        {/* Status Indicator */}
+        <div className="absolute top-4 right-4 z-10">
+          {doc.status === "draft" ? (
+            <div className="flex items-center bg-yellow-500/10 px-2 py-1 rounded-full">
+              <Clock className="w-3 h-3 text-yellow-500 mr-1" />
+              <span className="text-xs text-yellow-500 font-mono">DRAFT</span>
+            </div>
+          ) : (
+            <div className="flex items-center bg-green-500/10 px-2 py-1 rounded-full">
+              <Eye className="w-3 h-3 text-green-500 mr-1" />
+              <span className="text-xs text-green-500 font-mono">PUBLISHED</span>
+            </div>
+          )}
+        </div>
+
+        {/* Card Content */}
+        <div className="p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-white/5 rounded-lg border border-white/10 group-hover:border-white/20 transition-colors duration-300">
+              <FileText className="w-5 h-5 text-white/70 group-hover:text-white transition-colors duration-300" />
+            </div>
+            <h3 className="text-lg font-medium text-white truncate group-hover:text-white/90">
+              {doc.title}
+            </h3>
+          </div>
+
+          <p className="text-white/60 mb-6 line-clamp-2 group-hover:text-white/70 transition-colors duration-300">
+            {doc.description}
+          </p>
+
+          {/* Metadata */}
+          <div className="flex items-center justify-between pt-4 border-t border-white/10">
+            <span className="text-sm text-white/40 font-mono">
+              UPDATED_{new Date(doc.updatedAt).toLocaleDateString().replace(/\//g, '_')}
+            </span>
+            
+            {/* Action Buttons */}
+            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <button
+                onClick={() => navigate(`/dashboard/documents/${doc._id}`)}
+                className="p-2 bg-white/5 rounded-lg hover:bg-white/10 transition-colors duration-300 group/edit"
+              >
+                <Edit2 className="w-4 h-4 text-white/60 group-hover/edit:text-white transition-colors duration-300" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(doc._id);
+                }}
+                className="p-2 bg-white/5 rounded-lg hover:bg-red-500/10 transition-colors duration-300 group/delete"
+              >
+                <Trash2 className="w-4 h-4 text-white/60 group-hover/delete:text-red-400 transition-colors duration-300" />
+              </button>
+            </div>
+          </div>
+
+          {/* Hover Effect Overlay */}
+          <div 
+            className={`absolute inset-0 bg-gradient-to-r from-white/0 via-white/5 to-white/0 transform transition-transform duration-1000 ${
+              isHovered ? 'translate-x-full' : '-translate-x-full'
+            }`}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const Documents = () => {
-  const [documents, setDocuments] = useState([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [activeTab, setActiveTab] = useState("all")
-  const navigate = useNavigate()
-  const [deleteId, setDeleteId] = useState(null)
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [documents, setDocuments] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState("all");
+  const [deleteId, setDeleteId] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
-    fetchDocuments()
-  }, [])
+    fetchDocuments();
+  }, []);
 
   const fetchDocuments = async () => {
     try {
-      setIsLoading(true)
-      const response = await documentService.getAllDocuments()
-      setDocuments(response.data || [])
+      setIsLoading(true);
+      const response = await documentService.getAllDocuments();
+      setDocuments(response.data || []);
     } catch (err) {
-      setError("Failed to fetch documents")
-      console.error(err)
+      setError("Failed to fetch documents");
+      console.error(err);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleDeleteConfirm = (id) => {
-    setDeleteId(id)
-    setShowDeleteConfirm(true)
-  }
+    setDeleteId(id);
+    setShowDeleteConfirm(true);
+  };
 
   const handleDeleteDocument = async () => {
     try {
-      await documentService.deleteDocument(deleteId)
-      setShowDeleteConfirm(false)
-      fetchDocuments()
+      await documentService.deleteDocument(deleteId);
+      setShowDeleteConfirm(false);
+      fetchDocuments();
     } catch (err) {
-      console.error("Error deleting document:", err)
+      console.error("Error deleting document:", err);
     }
-  }
+  };
 
-  const filteredDocuments = documents.filter((doc) => activeTab === "all" || doc.status === activeTab)
+  const filteredDocuments = documents
+    .filter((doc) => activeTab === "all" || doc.status === activeTab)
+    .filter((doc) => 
+      doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      doc.description.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
-  if (isLoading) {
-    return <Loading />
-  }
+  if (isLoading) return <Loading />;
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-secondary-900 dark:text-white">Documentation</h1>
-          <p className="text-secondary-500 dark:text-secondary-400 mt-1">Manage your project documentation</p>
-        </div>
-        <Button onClick={() => navigate("/dashboard/documents/new")}>
-          <Plus className="w-4 h-4 mr-2" />
-          Create New Document
-        </Button>
-      </div>
-
-      {error && (
-        <div className="bg-red-50 dark:bg-red-900/50 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-200 rounded-md p-4">
-          {error}
-        </div>
-      )}
-
-      {/* Tabs */}
-      <div className="border-b border-secondary-200 dark:border-secondary-700">
-        <nav className="-mb-px flex space-x-8">
-          {["all", "published", "draft"].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`${
-                activeTab === tab
-                  ? "border-primary-500 text-primary-600 dark:text-primary-400"
-                  : "border-transparent text-secondary-500 hover:text-secondary-700 hover:border-secondary-300 dark:text-secondary-400 dark:hover:text-secondary-300 dark:hover:border-secondary-700"
-              } whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm capitalize`}
-            >
-              {tab}
-            </button>
-          ))}
-        </nav>
-      </div>
-
-      {/* Documents Grid */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {filteredDocuments.map((doc) => (
-          <div
-            key={doc._id}
-            className="bg-white dark:bg-secondary-800 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
-          >
-            <div className="p-6">
-              <div className="flex items-center gap-2 mb-4">
-                {doc.status === "draft" ? (
-                  <Clock className="w-5 h-5 text-yellow-500" />
-                ) : (
-                  <Book className="w-5 h-5 text-green-500" />
-                )}
-                <h3 className="text-lg font-medium text-secondary-900 dark:text-white truncate">{doc.title}</h3>
-              </div>
-
-              <p className="text-secondary-500 dark:text-secondary-400 mb-4 line-clamp-2">{doc.description}</p>
-
-              <div className="flex items-center justify-between mt-4 pt-4 border-t border-secondary-200 dark:border-secondary-700">
-                <span className="text-sm text-secondary-500 dark:text-secondary-400">
-                  Updated {new Date(doc.updatedAt).toLocaleDateString()}
-                </span>
-                <div className="flex gap-2">
-                  <Button variant="ghost" size="sm" onClick={() => navigate(`/dashboard/documents/${doc._id}`)}>
-                    <Edit2 className="w-4 h-4 mr-1" />
-                    Edit
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => handleDeleteConfirm(doc._id)}>
-                    <Trash2 className="w-4 h-4 mr-1" />
-                    Delete
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-
-        {filteredDocuments.length === 0 && (
-          <div className="col-span-full text-center py-12">
-            <FileText className="mx-auto h-12 w-12 text-secondary-400" />
-            <h3 className="mt-2 text-sm font-medium text-secondary-900 dark:text-secondary-200">No documents</h3>
-            <p className="mt-1 text-sm text-secondary-500 dark:text-secondary-400">
-              Get started by creating a new document
+    <div className="min-h-screen bg-black text-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header Section */}
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-bold font-mono">
+              DOCUMENTATION<span className="animate-pulse">_</span>
+            </h1>
+            <p className="text-white/60 mt-1">
+              Manage and organize your project documentation
             </p>
-            <div className="mt-6">
-              <Button onClick={() => navigate("/dashboard/documents/new")}>
-                <Plus className="w-4 h-4 mr-2" />
-                Create Document
-              </Button>
-            </div>
+          </div>
+          <Button 
+            onClick={() => navigate("/dashboard/documents/new")}
+            className="bg-white text-black hover:bg-white/90 transition-colors duration-300"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Create Document
+          </Button>
+        </div>
+
+        {/* Search and Filter Bar */}
+        <div className="mb-6 flex gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-white/40" />
+            <input
+              type="text"
+              placeholder="Search documents..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-2 text-white placeholder-white/40 focus:border-white/30 focus:ring-0 transition-all duration-300"
+            />
+          </div>
+          <div className="flex items-center bg-white/5 rounded-lg border border-white/10 px-3">
+            <Filter className="w-5 h-5 text-white/40 mr-2" />
+            <select
+              value={activeTab}
+              onChange={(e) => setActiveTab(e.target.value)}
+              className="bg-transparent border-none text-white/60 focus:ring-0 cursor-pointer"
+            >
+              <option value="all">All Documents</option>
+              <option value="published">Published</option>
+              <option value="draft">Drafts</option>
+            </select>
+          </div>
+        </div>
+
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg p-4 mb-6">
+            {error}
+          </div>
+        )}
+
+        {/* Documents Grid */}
+        {filteredDocuments.length > 0 ? (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {filteredDocuments.map((doc, index) => (
+              <DocumentCard
+                key={doc._id}
+                doc={doc}
+                index={index}
+                onDelete={handleDeleteConfirm}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <FileText className="mx-auto h-12 w-12 text-white/40" />
+            <h3 className="mt-2 text-lg font-medium text-white">No documents found</h3>
+            <p className="mt-1 text-white/60">
+              Get started by creating your first document
+            </p>
+            <Button
+              onClick={() => navigate("/dashboard/documents/new")}
+              className="mt-6 bg-white text-black hover:bg-white/90"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Create Document
+            </Button>
           </div>
         )}
       </div>
@@ -156,8 +238,7 @@ const Documents = () => {
         onCancel={() => setShowDeleteConfirm(false)}
       />
     </div>
-  )
-}
+  );
+};
 
-export default Documents
-
+export default Documents;
