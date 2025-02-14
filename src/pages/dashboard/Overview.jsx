@@ -89,7 +89,7 @@ const Overview = () => {
 
   const stats = [
     { name: 'TOTAL_DOCUMENTS', value: '12', icon: FileText },
-    { name: 'TEAM_MEMBERS', value: '04', icon: Users },
+    { name: 'TEAM_MEMBERS', value: '01', icon: Users },
     { name: 'CONNECTED_REPOS', value: '03', icon: GitBranch }
   ];
 

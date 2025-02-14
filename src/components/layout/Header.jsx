@@ -1,48 +1,88 @@
-// src/components/layout/Header.jsx
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Button } from '../common/Button';
+import { Sun, Moon, Laptop, Menu } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
-import { Sun, Moon } from 'lucide-react';
 
 const Header = () => {
-  const { isDark, toggleTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
+  const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
+
+  const themeOptions = [
+    { value: 'light', icon: Sun, label: 'Light' },
+    { value: 'dark', icon: Moon, label: 'Dark' },
+    { value: 'system', icon: Laptop, label: 'System' }
+  ];
 
   return (
-    <header className="bg-background-light dark:bg-background-dark border-b border-gray-200 dark:border-gray-800 transition-colors duration-300">
-      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <Link to="/" className="font-bold text-xl text-primary-light dark:text-primary-dark hover:opacity-80 transition-opacity">
-          DocsPlatform
-        </Link>
-        
-        <div className="flex items-center gap-6">
-          <button
-            onClick={toggleTheme}
-            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            aria-label="Toggle theme"
-          >
-            {isDark ? (
-              <Sun className="w-5 h-5 text-primary-dark" />
-            ) : (
-              <Moon className="w-5 h-5 text-primary-light" />
-            )}
-          </button>
-          
-          <Link 
-            to="/login" 
-            className="text-secondary-light dark:text-secondary-dark hover:text-primary-light dark:hover:text-primary-dark transition-colors"
-          >
-            Login
+    <header className="border-b border-white/10 transition-all duration-300">
+      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="flex justify-between items-center">
+          <Link to="/" className="text-white font-bold text-xl tracking-wider group">
+            DOCS<span className="animate-pulse">//</span>PLATFORM
           </Link>
-          
-          <Button 
-            as={Link} 
-            to="/signup" 
-            variant="primary"
-            className="futuristic-border"
-          >
-            Sign Up
-          </Button>
+
+          <div className="flex space-x-6 items-center">
+            {/* Theme Selector */}
+            <div className="relative">
+              <button
+                onClick={() => setIsThemeMenuOpen(!isThemeMenuOpen)}
+                className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-300 border border-white/10"
+              >
+                {theme === 'light' && <Sun className="w-5 h-5 text-white" />}
+                {theme === 'dark' && <Moon className="w-5 h-5 text-white" />}
+                {theme === 'system' && <Laptop className="w-5 h-5 text-white" />}
+              </button>
+
+              {isThemeMenuOpen && (
+                <div className="absolute right-0 mt-2 w-48 rounded-lg bg-black/80 backdrop-blur-xl border border-white/10 shadow-lg py-1 z-50">
+                  {themeOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => {
+                        setTheme(option.value);
+                        setIsThemeMenuOpen(false);
+                      }}
+                      className={`flex items-center w-full px-4 py-2 text-sm transition-all duration-300 ${
+                        theme === option.value
+                          ? 'text-white bg-white/10'
+                          : 'text-white/70 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <option.icon className="w-4 h-4 mr-2" />
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Navigation Links */}
+            <div className="hidden md:flex space-x-6">
+              {['Documentation', 'API', 'Support'].map((item) => (
+                <button
+                  key={item}
+                  className="text-white/70 hover:text-white transition-all duration-300 hover:scale-105"
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+
+            {/* Auth Buttons */}
+            <Link
+              to="/login"
+              className="text-white/70 hover:text-white transition-all duration-300 group"
+            >
+              Login <span className="font-mono group-hover:translate-x-1 inline-block transition-transform">→</span>
+            </Link>
+
+            <Link
+              to="/signup"
+              className="px-4 py-2 bg-white text-black hover:bg-white/90 transition-all duration-300 hover:scale-105 hover:shadow-[0_0_15px_rgba(255,255,255,0.3)]"
+            >
+              INITIALIZE
+            </Link>
+          </div>
         </div>
       </nav>
     </header>

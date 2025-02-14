@@ -4,10 +4,55 @@ import { documentService } from "../../services/documents";
 import { Button } from "../../components/common/Button";
 import Loading from "../../components/common/Loading";
 import { 
-  FileText, Plus, Book, Clock, Trash2, Edit2, 
-  Search, Filter, ArrowUpRight, Eye
+  FileText, Plus, Terminal, Clock, Trash2, Edit2, 
+  Search, Filter, ArrowUpRight, Eye, Code
 } from "lucide-react";
 import ConfirmDialog from "../../components/common/ConfirmDialog";
+
+const TypewriterText = ({ text, isActive }) => {
+  const [displayText, setDisplayText] = useState("");
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  useEffect(() => {
+    if (isActive && !isAnimating) {
+      // Start animation when hover starts
+      setIsAnimating(true);
+      setCurrentIndex(0);
+      setDisplayText("");
+    } else if (!isActive) {
+      // When hover ends, show full text after a brief delay
+      const timeout = setTimeout(() => {
+        setDisplayText(text);
+        setCurrentIndex(text.length);
+        setIsAnimating(false);
+      }, 200);
+      return () => clearTimeout(timeout);
+    }
+  }, [isActive, text]);
+
+  useEffect(() => {
+    if (isAnimating && currentIndex < text.length) {
+      const timeout = setTimeout(() => {
+        setDisplayText(text.slice(0, currentIndex + 1));
+        setCurrentIndex(prev => prev + 1);
+      }, 25); // Faster typing speed
+      return () => clearTimeout(timeout);
+    }
+    if (currentIndex >= text.length) {
+      setIsAnimating(false);
+    }
+  }, [currentIndex, text, isAnimating]);
+
+  return (
+    <span className="font-mono">
+      {displayText}
+      {isAnimating && (
+        <span className="animate-pulse text-green-400">_</span>
+      )}
+    </span>
+  );
+};
 
 const DocumentCard = ({ doc, onDelete, index }) => {
   const navigate = useNavigate();
@@ -15,85 +60,119 @@ const DocumentCard = ({ doc, onDelete, index }) => {
 
   return (
     <div 
-      className={`transform transition-all duration-500 hover:scale-102 ${
-        index % 2 === 0 ? 'hover:rotate-1' : 'hover:-rotate-1'
-      }`}
+      className="transform transition-all duration-500 hover:scale-[1.02]"
       style={{
         animationDelay: `${index * 100}ms`,
       }}
     >
       <div
-        className="relative group bg-black border border-white/10 rounded-lg overflow-hidden"
+        className="relative group bg-[#0A0A0A] border border-white/5 rounded-lg overflow-hidden hover:border-white/20 transition-all duration-300"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        {/* Status Indicator */}
-        <div className="absolute top-4 right-4 z-10">
-          {doc.status === "draft" ? (
-            <div className="flex items-center bg-yellow-500/10 px-2 py-1 rounded-full">
-              <Clock className="w-3 h-3 text-yellow-500 mr-1" />
-              <span className="text-xs text-yellow-500 font-mono">DRAFT</span>
-            </div>
-          ) : (
-            <div className="flex items-center bg-green-500/10 px-2 py-1 rounded-full">
-              <Eye className="w-3 h-3 text-green-500 mr-1" />
-              <span className="text-xs text-green-500 font-mono">PUBLISHED</span>
-            </div>
-          )}
+        {/* Terminal-like Header */}
+        <div className="flex items-center justify-between px-4 py-2 bg-white/5 border-b border-white/5">
+          <div className="flex items-center space-x-2">
+            <div className={`w-3 h-3 rounded-full transition-all duration-300 ${isHovered ? 'bg-red-500' : 'bg-red-500/50'}`}></div>
+            <div className={`w-3 h-3 rounded-full transition-all duration-300 ${isHovered ? 'bg-yellow-500' : 'bg-yellow-500/50'}`}></div>
+            <div className={`w-3 h-3 rounded-full transition-all duration-300 ${isHovered ? 'bg-green-500' : 'bg-green-500/50'}`}></div>
+          </div>
+          <div className="flex items-center space-x-2">
+            <span className="text-xs text-white/40 font-mono">ID: {doc._id?.slice(-6)}</span>
+          </div>
         </div>
 
         {/* Card Content */}
         <div className="p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-white/5 rounded-lg border border-white/10 group-hover:border-white/20 transition-colors duration-300">
-              <FileText className="w-5 h-5 text-white/70 group-hover:text-white transition-colors duration-300" />
+            <div className={`p-2 bg-white/5 rounded-lg border border-white/10 transition-all duration-300 ${
+              isHovered ? 'border-green-500/50 rotate-6 scale-110' : ''
+            }`}>
+              <Terminal className={`w-5 h-5 transition-all duration-300 ${
+                isHovered ? 'text-green-400' : 'text-white/70'
+              }`} />
             </div>
-            <h3 className="text-lg font-medium text-white truncate group-hover:text-white/90">
-              {doc.title}
-            </h3>
-          </div>
-
-          <p className="text-white/60 mb-6 line-clamp-2 group-hover:text-white/70 transition-colors duration-300">
-            {doc.description}
-          </p>
-
-          {/* Metadata */}
-          <div className="flex items-center justify-between pt-4 border-t border-white/10">
-            <span className="text-sm text-white/40 font-mono">
-              UPDATED_{new Date(doc.updatedAt).toLocaleDateString().replace(/\//g, '_')}
-            </span>
-            
-            {/* Action Buttons */}
-            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <button
-                onClick={() => navigate(`/dashboard/documents/${doc._id}`)}
-                className="p-2 bg-white/5 rounded-lg hover:bg-white/10 transition-colors duration-300 group/edit"
-              >
-                <Edit2 className="w-4 h-4 text-white/60 group-hover/edit:text-white transition-colors duration-300" />
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete(doc._id);
-                }}
-                className="p-2 bg-white/5 rounded-lg hover:bg-red-500/10 transition-colors duration-300 group/delete"
-              >
-                <Trash2 className="w-4 h-4 text-white/60 group-hover/delete:text-red-400 transition-colors duration-300" />
-              </button>
+            <div className="flex-1">
+              <h3 className="text-lg font-medium text-white/90">
+                <TypewriterText text={doc.title} isActive={isHovered} />
+              </h3>
+              <div className="flex items-center gap-2 mt-1">
+                {doc.status === "draft" ? (
+                  <div className={`flex items-center bg-yellow-500/10 px-2 py-0.5 rounded-full transition-all duration-300 ${
+                    isHovered ? 'bg-yellow-500/20' : ''
+                  }`}>
+                    <Clock className="w-3 h-3 text-yellow-500 mr-1" />
+                    <span className="text-xs text-yellow-500 font-mono">DRAFT</span>
+                  </div>
+                ) : (
+                  <div className={`flex items-center bg-green-500/10 px-2 py-0.5 rounded-full transition-all duration-300 ${
+                    isHovered ? 'bg-green-500/20' : ''
+                  }`}>
+                    <Eye className="w-3 h-3 text-green-500 mr-1" />
+                    <span className="text-xs text-green-500 font-mono">PUBLISHED</span>
+                  </div>
+                )}
+                <span className="text-xs text-white/40 font-mono">
+                  {new Date(doc.updatedAt).toLocaleDateString().replace(/\//g, '_')}
+                </span>
+              </div>
             </div>
           </div>
 
-          {/* Hover Effect Overlay */}
-          <div 
-            className={`absolute inset-0 bg-gradient-to-r from-white/0 via-white/5 to-white/0 transform transition-transform duration-1000 ${
-              isHovered ? 'translate-x-full' : '-translate-x-full'
-            }`}
-          />
+          {/* Code-like Description */}
+          <div className={`bg-white/5 rounded-lg p-4 font-mono text-sm transition-all duration-300 ${
+            isHovered ? 'bg-white/10' : ''
+          }`}>
+            <div className="text-green-400/80">// Document Description</div>
+            <div className="text-white/60 mt-2 line-clamp-2">{doc.description}</div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="mt-4 flex justify-end gap-2 pt-4 border-t border-white/5">
+            <button
+              onClick={() => navigate(`/dashboard/documents/${doc._id}`)}
+              className="p-2 bg-white/5 rounded-lg hover:bg-white/10 transition-colors duration-300 group/edit"
+            >
+              <Edit2 className="w-4 h-4 text-white/60 group-hover/edit:text-white transition-colors duration-300" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(doc._id);
+              }}
+              className="p-2 bg-white/5 rounded-lg hover:bg-red-500/10 transition-colors duration-300 group/delete"
+            >
+              <Trash2 className="w-4 h-4 text-white/60 group-hover/delete:text-red-400 transition-colors duration-300" />
+            </button>
+          </div>
+
+          {/* Matrix-like Background Effect */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            {isHovered && (
+              <div className="absolute inset-0 opacity-5">
+                {[...Array(15)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="absolute text-green-500 font-mono text-xs"
+                    style={{
+                      top: `${Math.random() * 100}%`,
+                      left: `${Math.random() * 100}%`,
+                      animation: `matrixRain ${1 + Math.random() * 2}s linear infinite`,
+                      animationDelay: `${Math.random() * 2}s`
+                    }}
+                  >
+                    {String.fromCharCode(33 + Math.random() * 93)}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
   );
 };
+
 
 const Documents = () => {
   const [documents, setDocuments] = useState([]);

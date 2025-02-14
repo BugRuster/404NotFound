@@ -4,32 +4,59 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 const ThemeContext = createContext();
 
 export const ThemeProvider = ({ children }) => {
-  const [isDark, setIsDark] = useState(() => {
+  const [theme, setTheme] = useState(() => {
     if (typeof window !== 'undefined') {
       const savedTheme = localStorage.getItem('theme');
-      return savedTheme === 'dark' || 
-             (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      if (savedTheme) return savedTheme;
+      return 'system';
     }
-    return false;
+    return 'system';
   });
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const root = window.document.documentElement;
-      if (isDark) {
+    const root = window.document.documentElement;
+    if (theme === 'dark') {
+      root.classList.add('dark');
+      root.classList.remove('light');
+      localStorage.setItem('theme', 'dark');
+    } else if (theme === 'light') {
+      root.classList.remove('dark');
+      root.classList.add('light');
+      localStorage.setItem('theme', 'light');
+    } else {
+      // System theme
+      localStorage.setItem('theme', 'system');
+      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
         root.classList.add('dark');
-        localStorage.setItem('theme', 'dark');
+        root.classList.remove('light');
       } else {
         root.classList.remove('dark');
-        localStorage.setItem('theme', 'light');
+        root.classList.add('light');
       }
     }
-  }, [isDark]);
+  }, [theme]);
 
-  const toggleTheme = () => setIsDark(!isDark);
+  useEffect(() => {
+    if (theme === 'system') {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      const handleChange = (e) => {
+        const root = window.document.documentElement;
+        if (e.matches) {
+          root.classList.add('dark');
+          root.classList.remove('light');
+        } else {
+          root.classList.remove('dark');
+          root.classList.add('light');
+        }
+      };
+
+      mediaQuery.addEventListener('change', handleChange);
+      return () => mediaQuery.removeEventListener('change', handleChange);
+    }
+  }, [theme]);
 
   return (
-    <ThemeContext.Provider value={{ isDark, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, setTheme }}>
       {children}
     </ThemeContext.Provider>
   );

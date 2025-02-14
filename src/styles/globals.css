@@ -121,3 +121,28 @@
 ::-webkit-scrollbar-thumb {
   @apply bg-primary-light dark:bg-primary-dark rounded-full;
 }
+
+
+@keyframes matrixRain {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+.matrix-rain {
+  position: absolute;
+  color: #0F0;
+  font-family: monospace;
+  font-size: 10px;
+  text-shadow: 0 0 5px #0F0;
+  user-select: none;
+  pointer-events: none;
+}
