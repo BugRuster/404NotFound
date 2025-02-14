@@ -2,7 +2,9 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:5001', // Your backend URL
+  // baseURL: 'http://localhost:5001',
+  //  // Your backend URL
+  baseURL: 'https://404-not-found-backend.vercel.app',
   headers: {
     'Content-Type': 'application/json',
   },
