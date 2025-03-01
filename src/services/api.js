@@ -10,7 +10,7 @@ const api = axios.create({
   },
 });
 
-// Add request interceptor to add auth token
+// Add request interceptor to add auth token sdsd
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
